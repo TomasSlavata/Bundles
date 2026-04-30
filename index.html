@@ -171,6 +171,49 @@ select { cursor: pointer; }
 .price-affix.prefix { left: 10px; }
 .price-affix.suffix { right: 10px; }
 
+/* ── Tier badge button (per-tier "Add badge" / saved badge) ──── */
+.tier-badge-row {
+  display: flex;
+  align-items: flex-start;
+  height: 28px;
+}
+
+.tier-badge-btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 450;
+  line-height: 20px;
+  border: none;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+
+/* Default "Add badge" state */
+.tier-badge-btn.add {
+  background: #f1f1f1;
+  color: #303030;
+}
+.tier-badge-btn.add:hover,
+.tier-badge-btn.add:active { background: #ebebeb; }
+
+.tier-badge-btn.add .plus-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0;
+}
+
+/* Saved badge state — color comes from inline styles */
+.tier-badge-btn.saved { /* bg + color set inline */ }
+
 /* ── Add tier button ──────────────────────────────── */
 .add-tier-box {
   border: 1px solid #e3e3e3;
@@ -402,89 +445,392 @@ select { cursor: pointer; }
 /* ── Preview card ─────────────────────────────────── */
 .preview-card { position: sticky; top: 32px; }
 .preview-label { font-size: 13px; font-weight: 650; color: #303030; margin-bottom: 16px; }
-.bundle-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+
+/* Gap is 10px by default; switches to 14px when any badge is present */
+.bundle-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.bundle-list.has-badge { gap: 14px; }
 
 .b-card {
   display: flex;
   align-items: center;
-  padding: 12px 14px;
-  border-radius: 8px;
-  border: 1px solid #e6e6e6;
+  padding: 16px 18px;
+  border: 1px solid rgba(40, 42, 44, 0.2);
   background: #fff;
   cursor: pointer;
   position: relative;
-  transition: border-color 0.15s;
   min-height: 48px;
 }
 
-.b-card:hover { border-color: #c9cccf; }
-
 .b-card.active {
-  border: 2px solid #303030;
-  background: #fff;
+  border: 2px solid #282a2c;
+  /* Compensate the extra 1px of border so size stays identical to inactive cards */
+  padding: 15px 17px;
 }
 
+/* Radio (Figma: 20×20 round checkbox-style) */
 .b-radio {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1.5px solid #8a8a8a;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1.111px solid rgba(40, 42, 44, 0.4);
+  background: #fff;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.15s;
+  margin-right: 16px;
 }
 
-.b-card.active .b-radio { border-color: #303030; }
+.b-card.active .b-radio {
+  background: #282a2c;
+  border-color: #282a2c;
+}
 
-.b-radio-dot {
-  width: 8px;
+.b-radio-check {
+  width: 11px;
   height: 8px;
-  border-radius: 50%;
-  background: transparent;
-  transition: background 0.15s;
+  display: none;
 }
 
-.b-card.active .b-radio-dot { background: #303030; }
+.b-card.active .b-radio-check { display: block; }
 
-.b-info { margin-left: 10px; flex: 1; min-width: 0; }
-.b-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.b-name { font-size: 13px; font-weight: 550; color: #303030; }
+.b-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.b-name-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.b-name {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+  color: #282a2c;
+}
 
 .b-tag {
-  font-size: 11px;
-  color: #616161;
-  background: #f1f1f1;
-  padding: 1px 6px;
-  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgba(40, 42, 44, 0.75);
+  background: rgba(40, 42, 44, 0.05);
+  padding: 2px 9px;
 }
 
-.b-sub { font-size: 12px; color: #8a8a8a; margin-top: 1px; }
+.b-sub {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgba(40, 42, 44, 0.75);
+  padding-top: 2px;
+}
 
-.b-price { text-align: right; flex-shrink: 0; margin-left: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-.b-price-main-row { display: flex; align-items: baseline; gap: 4px; justify-content: flex-end; }
-.b-price-top  { font-size: 11px; color: #8a8a8a; }
-.b-price-main { font-size: 14px; font-weight: 650; color: #303030; }
-.b-price-unit-lbl { font-size: 12px; font-weight: 400; color: #8a8a8a; }
-.b-price-bottom { font-size: 11px; color: #8a8a8a; }
+.b-price {
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.b-price-main-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.b-price-top {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgba(40, 42, 44, 0.75);
+}
+
+.b-price-main {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+  color: #282a2c;
+}
+
+.b-price-unit-lbl {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgba(40, 42, 44, 0.75);
+}
+
+.b-price-bottom {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgba(40, 42, 44, 0.75);
+  padding-top: 2px;
+}
 
 .b-badge {
   position: absolute;
-  top: -8px;
-  right: 12px;
-  font-size: 11px;
-  font-weight: 550;
-  color: #164e63;
-  background: #e0f2fe;
-  padding: 1px 8px;
-  border-radius: 20px;
+  top: -11px;
+  right: 15px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  padding: 2px 9px;
   white-space: nowrap;
-  border: 1px solid #bae6fd;
+  /* background + color set inline per tier */
 }
 
 .preview-helper { font-size: 13px; color: #616161; line-height: 20px; }
 .preview-helper a { color: #005bd3; text-decoration: underline; }
+
+/* ── Badge Modal ──────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 620px;
+  max-width: 100%;
+  overflow: hidden;
+  box-shadow:
+    0 20px 20px -8px rgba(26, 26, 26, 0.28),
+    inset 1px 0 0 0 rgba(0, 0, 0, 0.13),
+    inset -1px 0 0 0 rgba(0, 0, 0, 0.17),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.17),
+    inset 0 1px 0 0 rgba(204, 204, 204, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  background: #f3f3f3;
+  border-bottom: 1px solid #e3e3e3;
+  padding: 12px 12px 12px 16px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.modal-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 20px;
+  color: #303030;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #303030;
+  transition: background 0.12s;
+}
+
+.modal-close:hover { background: rgba(0, 0, 0, 0.05); }
+
+.modal-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-footer {
+  background: #fff;
+  border-top: 1px solid #e3e3e3;
+  padding: 16px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* When there's no Remove button, the right group occupies the full row */
+.modal-footer.no-remove { justify-content: flex-end; }
+
+.modal-footer-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-btn {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+
+.modal-btn-secondary {
+  background: #fff;
+  color: #303030;
+  box-shadow:
+    inset 0 -1px 0 0 #b5b5b5,
+    inset -1px 0 0 0 #e3e3e3,
+    inset 1px 0 0 0 #e3e3e3,
+    inset 0 1px 0 0 #e3e3e3;
+}
+.modal-btn-secondary:hover { background: #f7f7f7; }
+
+.modal-btn-critical {
+  background: #fff;
+  color: #8e1f0b;
+  box-shadow:
+    inset 0 -1px 0 0 #b5b5b5,
+    inset -1px 0 0 0 #e3e3e3,
+    inset 1px 0 0 0 #e3e3e3,
+    inset 0 1px 0 0 #e3e3e3;
+}
+.modal-btn-critical:hover { background: #fff5f5; }
+
+.modal-btn-primary {
+  background: #303030;
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 0 #000,
+    inset 0 -1px 0 1px #000,
+    inset -2px 0 0 0 rgba(255, 255, 255, 0.2),
+    inset 2px 0 0 0 rgba(255, 255, 255, 0.2),
+    inset 0 2px 0 0 rgba(255, 255, 255, 0.2);
+}
+.modal-btn-primary:hover { background: #1a1a1a; }
+
+.modal-btn-primary:disabled {
+  background: rgba(0, 0, 0, 0.17);
+  color: #fff;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Modal field with counter */
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.modal-field-label-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modal-field-label-row > span {
+  font-size: 13px;
+  font-weight: 450;
+  color: #303030;
+  line-height: 20px;
+}
+
+.modal-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.modal-input-wrap input {
+  padding-right: 48px; /* space for counter */
+}
+
+.input-counter {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #616161;
+  pointer-events: none;
+}
+
+.modal-helper {
+  font-size: 13px;
+  color: #616161;
+  line-height: 20px;
+}
+
+/* Colors row */
+.color-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.color-field { display: flex; flex-direction: column; gap: 4px; }
+
+.color-field-label {
+  font-size: 13px;
+  font-weight: 450;
+  color: #303030;
+  line-height: 20px;
+}
+
+.color-input-row { display: flex; gap: 4px; align-items: stretch; }
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 0.66px solid #8a8a8a;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.color-swatch input[type=color] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hex-input-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.hex-input-wrap .prefix {
+  position: absolute;
+  left: 12px;
+  font-size: 13px;
+  color: #616161;
+  pointer-events: none;
+}
+
+.hex-input-wrap input {
+  padding-left: 22px;
+  text-transform: uppercase;
+}
 </style>
 </head>
 <body>
@@ -525,27 +871,27 @@ select { cursor: pointer; }
       <!-- Unit size -->
       <div class="unit-size-section">
         <label class="checkbox-row">
-          <input type="checkbox" id="cbSize" onchange="onUnitSizeChange()">
+          <input type="checkbox" id="cbSize" checked onchange="onUnitSizeChange()">
           <span class="checkbox-label">Unit size</span>
         </label>
         <div class="unit-size-child" id="childSize">
           <div class="unit-size-inputs">
             <div class="field">
               <div class="field-label">Per pack</div>
-              <input type="number" id="unitsPerPack" min="1" step="any" oninput="renderPreview()">
+              <input type="number" id="unitsPerPack" min="1" step="any" value="250" oninput="renderPreview()">
             </div>
             <div class="field">
               <div class="field-label">Unit label</div>
-              <input type="text" id="unitLabel" placeholder="e.g. g, ml, pcs" oninput="renderPreview()">
+              <input type="text" id="unitLabel" placeholder="e.g. g, ml, pcs" value="g" oninput="renderPreview()">
             </div>
           </div>
           <div class="unit-size-section">
             <label class="checkbox-row">
-              <input type="checkbox" id="cbBase" onchange="onUnitSizeChange()">
+              <input type="checkbox" id="cbBase" checked onchange="onUnitSizeChange()">
               <span class="checkbox-label">Price per unit</span>
             </label>
             <div class="unit-size-child" id="childBase">
-              <input type="number" id="baseQty" min="1" step="any" oninput="renderPreview()">
+              <input type="number" id="baseQty" min="1" step="any" value="100" oninput="renderPreview()">
               <div class="sub-hint">Enter 100 to show price per 100g, or 1 for price per pc.</div>
             </div>
           </div>
@@ -580,22 +926,21 @@ const PLACEHOLDER_PRICE = 29.99;
 const fmt = p => '$' + Math.abs(p).toFixed(2);
 
 let tiers = [
-  { title: '1 Pack',  qty: 1, method: 0, value: 0  },
-  { title: '2 Packs', qty: 2, method: 1, value: 10 },
-  { title: '3 Packs', qty: 3, method: 1, value: 20 },
+  { title: '1 Pack',  qty: 1, method: 0, value: 0,  badge: null },
+  { title: '2 Packs', qty: 2, method: 1, value: 10, badge: { label: 'Save {{amount_saved}}', bg: '#dc1e0a', text: '#ffffff' } },
+  { title: '3 Packs', qty: 3, method: 1, value: 20, badge: { label: 'Save {{amount_saved}}', bg: '#dc1e0a', text: '#ffffff' } },
 ];
 
 let defaultTierIndex = 0;
 let selectedPreview  = 0;
 
 let displayFields = [
-  { id: 'leftSub',     label: 'Subtitle',       value: '' },
-  { id: 'tag',         label: 'Tag',             value: '' },
+  { id: 'leftSub',     label: 'Subtitle',       value: '{{total_price}} total' },
+  { id: 'tag',         label: 'Tag',             value: '{{unit_size}}' },
   { id: 'rightMain',   label: 'Price',           value: '{{total_price}}' },
-  { id: 'rightBotSub', label: 'Price subtitle',  value: '' },
+  { id: 'rightBotSub', label: 'Price subtitle',  value: '{{price_per_base}} / 100g' },
   { id: 'rightTopSub', label: 'Price prefix',    value: '{{orig_total_price}}' },
-  { id: 'rightSuffix', label: 'Price suffix',    value: '' },
-  { id: 'badge',       label: 'Badge',           value: 'Save {{amount_saved}}', fullWidth: true },
+  { id: 'rightSuffix', label: 'Price suffix',    value: '/ ea' },
 ];
 
 let openDropdown = null;
@@ -709,6 +1054,227 @@ function resolve(tpl, vars) {
     .replace(/\{\{price_per_base\}\}/g,   vars.pricePerBase  != null ? fmt(vars.pricePerBase)                : '');
 }
 
+/* Badge has its own tiny resolver — only 2 tokens, no strikethrough */
+function resolveBadge(tpl, vars) {
+  return (tpl || '')
+    .replace(/\{\{discount_pct\}\}/g, vars.discountPct != null ? `${vars.discountPct}%` : '')
+    .replace(/\{\{amount_saved\}\}/g, vars.amountSaved != null ? fmt(vars.amountSaved)  : '');
+}
+
+/* ── Badge Modal ───────────────────────────────────── */
+let badgeModalTier = null;        // index of tier being edited
+let lastValidLabel = '';          // last label value that fit the 18-char effective limit
+
+const MAX_LABEL_EFFECTIVE = 18;
+
+/* Each {{variable}} token counts as 3 chars; everything else counts as itself. */
+function effectiveLength(text) {
+  if (!text) return 0;
+  // Sum the lengths of all {{...}} tokens to subtract them, then add 3 per token
+  const tokens = text.match(/\{\{[a-z_]+\}\}/gi) || [];
+  let tokensRawLength = 0;
+  tokens.forEach(t => { tokensRawLength += t.length; });
+  return text.length - tokensRawLength + tokens.length * 3;
+}
+
+/* Enforce 18-char effective max: if the new value overflows, revert to lastValidLabel */
+function enforceLabelMax(input) {
+  if (effectiveLength(input.value) <= MAX_LABEL_EFFECTIVE) {
+    lastValidLabel = input.value;
+    return true;
+  }
+  // Restore previous value and place caret at the end
+  const prev = lastValidLabel;
+  input.value = prev;
+  const pos = prev.length;
+  try { input.setSelectionRange(pos, pos); } catch {}
+  return false;
+}
+
+function openBadgeModal(i) {
+  closeActionLists();
+  badgeModalTier = i;
+  const isEdit = !!tiers[i].badge;
+  const existing = tiers[i].badge || { label: '', bg: '#dc1e0a', text: '#ffffff' };
+
+  document.getElementById('badgeLabelInput').value = existing.label;
+  lastValidLabel = existing.label;
+
+  document.getElementById('badgeBgColor').value = existing.bg;
+  document.getElementById('badgeBgHex').value = existing.bg.replace('#', '').toUpperCase();
+  document.getElementById('badgeTextColor').value = existing.text;
+  document.getElementById('badgeTextHex').value = existing.text.replace('#', '').toUpperCase();
+  document.getElementById('bgSwatch').style.background = existing.bg;
+  document.getElementById('textSwatch').style.background = existing.text;
+
+  // Show Remove only when editing an existing badge
+  const footer = document.getElementById('badgeModalFooter');
+  const removeBtn = document.getElementById('badgeRemoveBtn');
+  if (isEdit) {
+    footer.classList.remove('no-remove');
+    removeBtn.style.display = '';
+  } else {
+    footer.classList.add('no-remove');
+    removeBtn.style.display = 'none';
+  }
+
+  updateBadgeLabelCounter();
+  updateSaveButton();
+  document.getElementById('badgeModal').classList.add('open');
+}
+
+function closeBadgeModal() {
+  document.getElementById('badgeModal').classList.remove('open');
+  closeModalVarDropdown();
+  badgeModalTier = null;
+}
+
+/* Save:
+   - empty label → behaves like Remove (clears the badge)
+   - non-empty label → persists the badge */
+function saveBadge() {
+  if (badgeModalTier == null) return;
+  const label = document.getElementById('badgeLabelInput').value.trim();
+  const validBg = isValidHex(document.getElementById('badgeBgHex').value);
+  const validText = isValidHex(document.getElementById('badgeTextHex').value);
+  if (!validBg || !validText) return;
+
+  if (!label) {
+    tiers[badgeModalTier].badge = null;
+  } else {
+    const bg = '#' + document.getElementById('badgeBgHex').value.trim().toLowerCase();
+    const text = '#' + document.getElementById('badgeTextHex').value.trim().toLowerCase();
+    tiers[badgeModalTier].badge = { label, bg, text };
+  }
+  closeBadgeModal();
+  renderTiers();
+}
+
+/* Footer Remove button — same as action-list "Remove badge" */
+function onModalRemove() {
+  if (badgeModalTier == null) return;
+  const i = badgeModalTier;
+  closeBadgeModal();
+  removeBadge(i);
+}
+
+function removeBadge(i) {
+  tiers[i].badge = null;
+  renderTiers();
+}
+
+function onBadgeLabelInput() {
+  const input = document.getElementById('badgeLabelInput');
+  enforceLabelMax(input);
+  updateBadgeLabelCounter();
+  updateSaveButton();
+}
+
+function updateBadgeLabelCounter() {
+  const v = document.getElementById('badgeLabelInput').value;
+  document.getElementById('badgeLabelCounter').textContent = `${effectiveLength(v)}/${MAX_LABEL_EFFECTIVE}`;
+}
+
+/* Save is enabled when colors are valid. Label may be empty (= remove on save). */
+function updateSaveButton() {
+  const validBg = isValidHex(document.getElementById('badgeBgHex').value);
+  const validText = isValidHex(document.getElementById('badgeTextHex').value);
+  document.getElementById('badgeSaveBtn').disabled = !(validBg && validText);
+}
+
+function isValidHex(v) { return /^[0-9a-fA-F]{6}$/.test(v.trim()); }
+
+/* Color <-> hex sync */
+function onBgColorChange(val) {
+  document.getElementById('badgeBgHex').value = val.replace('#', '').toUpperCase();
+  document.getElementById('bgSwatch').style.background = val;
+  updateSaveButton();
+}
+function onBgHexInput(val) {
+  const clean = val.trim();
+  if (isValidHex(clean)) {
+    const hex = '#' + clean.toLowerCase();
+    document.getElementById('badgeBgColor').value = hex;
+    document.getElementById('bgSwatch').style.background = hex;
+  }
+  updateSaveButton();
+}
+function onTextColorChange(val) {
+  document.getElementById('badgeTextHex').value = val.replace('#', '').toUpperCase();
+  document.getElementById('textSwatch').style.background = val;
+  updateSaveButton();
+}
+function onTextHexInput(val) {
+  const clean = val.trim();
+  if (isValidHex(clean)) {
+    const hex = '#' + clean.toLowerCase();
+    document.getElementById('badgeTextColor').value = hex;
+    document.getElementById('textSwatch').style.background = hex;
+  }
+  updateSaveButton();
+}
+
+/* Variable picker inside the modal */
+function toggleModalVarDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('modalVarDropdown');
+  const willOpen = !dd.classList.contains('open');
+  if (!willOpen) { dd.classList.remove('open'); return; }
+  dd.innerHTML = `
+    <div class="var-group">
+      <div class="var-item" onclick="insertBadgeVar('{{discount_pct}}')">Discount %</div>
+      <div class="var-item" onclick="insertBadgeVar('{{amount_saved}}')">Amount saved</div>
+    </div>`;
+  // Position dropdown next to the var icon
+  const btn = document.getElementById('modalVarBtn');
+  const rect = btn.getBoundingClientRect();
+  dd.style.position = 'fixed';
+  dd.style.top = (rect.bottom + 4) + 'px';
+  dd.style.right = (window.innerWidth - rect.right) + 'px';
+  dd.classList.add('open');
+}
+
+function closeModalVarDropdown() {
+  document.getElementById('modalVarDropdown')?.classList.remove('open');
+}
+
+function insertBadgeVar(token) {
+  const input = document.getElementById('badgeLabelInput');
+  const s = input.selectionStart, e = input.selectionEnd;
+  const candidate = input.value.slice(0, s) + token + input.value.slice(e);
+  if (effectiveLength(candidate) > MAX_LABEL_EFFECTIVE) {
+    // Insertion would overflow — ignore it (variable counts as 3 chars).
+    closeModalVarDropdown();
+    return;
+  }
+  input.value = candidate;
+  lastValidLabel = candidate;
+  input.focus();
+  const pos = s + token.length;
+  try { input.setSelectionRange(pos, pos); } catch {}
+  closeModalVarDropdown();
+  updateBadgeLabelCounter();
+  updateSaveButton();
+}
+
+/* Click outside modal closes it; click outside dropdown closes dropdown */
+document.addEventListener('click', (e) => {
+  const overlay = document.getElementById('badgeModal');
+  if (!overlay) return;
+  if (overlay.classList.contains('open') && e.target === overlay) closeBadgeModal();
+  const dd = document.getElementById('modalVarDropdown');
+  if (dd?.classList.contains('open')) {
+    const btn = document.getElementById('modalVarBtn');
+    if (!dd.contains(e.target) && !btn.contains(e.target)) closeModalVarDropdown();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('badgeModal').classList.contains('open')) {
+    closeBadgeModal();
+  }
+});
+
 /* ── Default select ────────────────────────────────── */
 function renderDefaultSelect() {
   const sel = document.getElementById('defaultTierSelect');
@@ -756,6 +1322,26 @@ function renderTiers() {
 
     const box = document.createElement('div');
     box.className = 'tier-box';
+
+    const hasBadge = !!t.badge;
+    const badgeMenuItems = hasBadge
+      ? `<div class="action-list-item" onclick="openBadgeModal(${i});closeActionLists()">Edit badge</div>
+         <div class="action-list-item" onclick="removeBadge(${i});closeActionLists()">Remove badge</div>`
+      : `<div class="action-list-item" onclick="openBadgeModal(${i});closeActionLists()">Add badge</div>`;
+
+    const badgeButton = hasBadge
+      ? `<button class="tier-badge-btn saved"
+            style="background:${t.badge.bg};color:${t.badge.text};"
+            onclick="openBadgeModal(${i})">${escHtml(badgePreviewText(t))}</button>`
+      : `<button class="tier-badge-btn add" onclick="openBadgeModal(${i})">
+           <span class="plus-icon">
+             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+               <path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+             </svg>
+           </span>
+           Add badge
+         </button>`;
+
     box.innerHTML = `
       <div class="tier-box-header">
         <div class="tier-box-label">
@@ -766,6 +1352,7 @@ function renderTiers() {
           <button class="tier-icon-btn" onclick="toggleActionList(event,${i})" id="menu-btn-${i}">${dotsIconSVG}</button>
           <div class="action-list" id="action-list-${i}">
             <div class="action-list-item" onclick="duplicateTier(${i});closeActionLists()">Duplicate tier</div>
+            ${badgeMenuItems}
           </div>
           <button class="tier-icon-btn remove" onclick="removeTier(${i})">${xIconSVG}</button>
         </div>
@@ -788,6 +1375,7 @@ function renderTiers() {
           <select onchange="tiers[${i}].method=+this.value;renderTiers()">${methodOpts}</select>
           ${valueInput}
         </div>
+        <div class="tier-badge-row">${badgeButton}</div>
       </div>
     `;
     container.appendChild(box);
@@ -797,14 +1385,34 @@ function renderTiers() {
   renderPreview();
 }
 
+/* Live-evaluated badge label for the per-tier button */
+function badgePreviewText(tier) {
+  if (!tier.badge) return '';
+  const total = computeTotal(tier);
+  const origTotal = PLACEHOLDER_PRICE * tier.qty;
+  const saved = origTotal - total;
+  const discountPct = saved > 0.001 ? Math.round((saved / origTotal) * 100) : 0;
+  const vars = {
+    discountPct: discountPct > 0 ? discountPct : null,
+    amountSaved: saved > 0.001 ? saved : null,
+  };
+  const out = resolveBadge(tier.badge.label, vars).trim();
+  return out || tier.badge.label || 'Badge';
+}
+
 function addTier() {
   const last = tiers[tiers.length - 1];
-  tiers.push({ title: (last.qty + 1) + ' Packs', qty: last.qty + 1, method: 1, value: 5 });
+  tiers.push({ title: (last.qty + 1) + ' Packs', qty: last.qty + 1, method: 1, value: 5, badge: null });
   renderTiers();
 }
 
 function duplicateTier(i) {
-  tiers.splice(i + 1, 0, { ...tiers[i], title: tiers[i].title + ' (copy)' });
+  const src = tiers[i];
+  tiers.splice(i + 1, 0, {
+    ...src,
+    title: src.title + ' (copy)',
+    badge: src.badge ? { ...src.badge } : null,
+  });
   if (defaultTierIndex > i) defaultTierIndex++;
   if (selectedPreview  > i) selectedPreview++;
   renderTiers();
@@ -966,7 +1574,22 @@ function renderPreview() {
   const rightMainTpl = displayFields.find(f => f.id === 'rightMain').value;
   const rightBotTpl  = displayFields.find(f => f.id === 'rightBotSub').value;
   const rightTopTpl  = displayFields.find(f => f.id === 'rightTopSub').value;
-  const badgeTpl     = displayFields.find(f => f.id === 'badge').value;
+
+  // Gap switches to 14px when ANY tier (including the first) has a badge with non-empty resolved label.
+  let anyBadge = false;
+  tiers.forEach((t) => {
+    if (!t.badge) return;
+    const total       = computeTotal(t);
+    const origTotal   = PLACEHOLDER_PRICE * t.qty;
+    const saved       = origTotal - total;
+    const discountPct = saved > 0.001 ? Math.round((saved / origTotal) * 100) : 0;
+    const vars = {
+      discountPct: discountPct > 0 ? discountPct : null,
+      amountSaved: saved > 0.001 ? saved : null,
+    };
+    if (resolveBadge(t.badge.label, vars).trim()) anyBadge = true;
+  });
+  list.classList.toggle('has-badge', anyBadge);
 
   tiers.forEach((t, i) => {
     const total       = computeTotal(t);
@@ -997,7 +1620,7 @@ function renderPreview() {
     const rightMainText = resolve(rightMainTpl, vars).trim();
     const rightBotText = resolve(rightBotTpl, vars).trim();
     const rightTopText = resolve(rightTopTpl, vars).trim();
-    const badgeText    = i === 0 ? '' : resolve(badgeTpl, vars).trim();
+    const badgeText    = t.badge ? resolveBadge(t.badge.label, vars).trim() : '';
 
     const showUnitLbl = !!unitPriceLbl;
     const isActive = selectedPreview === i;
@@ -1006,9 +1629,17 @@ function renderPreview() {
     card.className = 'b-card' + (isActive ? ' active' : '');
     card.onclick = () => { selectedPreview = i; renderPreview(); };
 
+    const badgeHtml = badgeText
+      ? `<div class="b-badge" style="background:${t.badge.bg};color:${t.badge.text};">${badgeText}</div>`
+      : '';
+
     card.innerHTML = `
-      ${badgeText ? `<div class="b-badge">${badgeText}</div>` : ''}
-      <div class="b-radio"><div class="b-radio-dot"></div></div>
+      ${badgeHtml}
+      <div class="b-radio">
+        <svg class="b-radio-check" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 4L4 7L10 1" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
       <div class="b-info">
         <div class="b-name-row">
           <span class="b-name">${escHtml(t.title)}</span>
@@ -1039,8 +1670,79 @@ function escHtml(str) {
 /* ── Init ──────────────────────────────────────────── */
 renderTiers();
 renderDisplaySettings();
+onUnitSizeChange();
 renderPreview();
 </script>
+
+<!-- Badge Modal -->
+<div class="modal-overlay" id="badgeModal">
+  <div class="modal" role="dialog" aria-labelledby="badgeModalTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="badgeModalTitle">Badge</div>
+      <button class="modal-close" onclick="closeBadgeModal()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+          <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <div class="modal-field-label-row">
+          <span>Label</span>
+          <div class="tooltip-wrap">
+            <button class="var-icon-btn" onclick="toggleModalVarDropdown(event)" id="modalVarBtn">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                <path d="M7 4C5.5 4 4.5 5 4.5 6.5V8.5C4.5 10 3.5 10.5 2.5 10.5C3.5 10.5 4.5 11 4.5 12.5V14.5C4.5 16 5.5 17 7 17" stroke="#616161" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M13 4C14.5 4 15.5 5 15.5 6.5V8.5C15.5 10 16.5 10.5 17.5 10.5C16.5 10.5 15.5 11 15.5 12.5V14.5C15.5 16 14.5 17 13 17" stroke="#616161" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <div class="tooltip">Insert variable</div>
+            <div class="var-dropdown" id="modalVarDropdown"></div>
+          </div>
+        </div>
+        <div class="modal-input-wrap">
+          <input type="text" id="badgeLabelInput" oninput="onBadgeLabelInput()">
+          <span class="input-counter" id="badgeLabelCounter">0/18</span>
+        </div>
+        <div class="modal-helper">Use the variable to display the offer discount (if applicable).</div>
+      </div>
+
+      <div class="color-row">
+        <div class="color-field">
+          <div class="color-field-label">Background color</div>
+          <div class="color-input-row">
+            <label class="color-swatch" id="bgSwatch">
+              <input type="color" id="badgeBgColor" oninput="onBgColorChange(this.value)">
+            </label>
+            <div class="hex-input-wrap">
+              <span class="prefix">#</span>
+              <input type="text" id="badgeBgHex" maxlength="6" oninput="onBgHexInput(this.value)">
+            </div>
+          </div>
+        </div>
+        <div class="color-field">
+          <div class="color-field-label">Text color</div>
+          <div class="color-input-row">
+            <label class="color-swatch" id="textSwatch">
+              <input type="color" id="badgeTextColor" oninput="onTextColorChange(this.value)">
+            </label>
+            <div class="hex-input-wrap">
+              <span class="prefix">#</span>
+              <input type="text" id="badgeTextHex" maxlength="6" oninput="onTextHexInput(this.value)">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" id="badgeModalFooter">
+      <button class="modal-btn modal-btn-critical" id="badgeRemoveBtn" onclick="onModalRemove()">Remove</button>
+      <div class="modal-footer-end">
+        <button class="modal-btn modal-btn-secondary" onclick="closeBadgeModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="badgeSaveBtn" onclick="saveBadge()" disabled>Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
