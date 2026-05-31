@@ -1,0 +1,3260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bundle Tiers — Admin Prototype v7.30</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f1f1f1;
+  padding: 32px 24px;
+  color: #303030;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/* ── Layout ───────────────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 434px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  max-width: 980px;
+}
+
+.left-stack { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Polaris card ─────────────────────────────────── */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow:
+    inset 1px 0 0 0 rgba(0,0,0,0.13),
+    inset -1px 0 0 0 rgba(0,0,0,0.13),
+    inset 0 -1px 0 0 rgba(0,0,0,0.17),
+    inset 0 1px 0 0 rgba(204,204,204,0.5),
+    0 1px 0 0 rgba(26,26,26,0.07);
+}
+
+.card-section {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card-header { display: flex; flex-direction: column; gap: 2px; }
+.card-title { font-size: 13px; font-weight: 650; color: #303030; line-height: 20px; }
+.card-subtitle { font-size: 13px; font-weight: 450; color: #616161; line-height: 20px; }
+
+/* ── Form elements ────────────────────────────────── */
+input[type=text],
+input[type=number],
+select {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 450;
+  line-height: 20px;
+  height: 32px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 0.66px solid #8a8a8a;
+  background: #fdfdfd;
+  color: #303030;
+  width: 100%;
+  outline: none;
+}
+
+input[type=text]:focus,
+input[type=number]:focus,
+select:focus {
+  border-color: #005bd3;
+  box-shadow: 0 0 0 3px rgba(0,91,211,0.15);
+}
+
+/* Hide native number-input steppers (spin buttons) in all browser states */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input:disabled {
+  background: #f7f7f7;
+  color: #8a8a8a;
+  cursor: not-allowed;
+  border-color: #c9cccf;
+}
+
+select { cursor: pointer; }
+
+/* ── Tier boxes ───────────────────────────────────── */
+.tier-boxes { display: flex; flex-direction: column; gap: 16px; }
+
+.tier-box {
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+}
+
+.tier-box-header {
+  background: #f7f7f7;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tier-box-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 550;
+  color: #303030;
+}
+
+.tier-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #616161;
+}
+
+.tier-btn-group { display: flex; gap: 4px; align-items: center; }
+
+.tier-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #616161;
+  transition: background 0.12s;
+  line-height: 1;
+}
+
+.tier-icon-btn .tier-icon-btn-wrap {
+  width: 20px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tier-icon-btn:hover { background: rgba(0, 0, 0, 0.05); }
+
+.tier-box-content {
+  background: #fff;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tier-row { display: flex; gap: 12px; align-items: flex-start; }
+.tier-row-2col { display: flex; gap: 12px; align-items: flex-start; }
+.tier-row-2col > * { flex: 1 1 0; min-width: 0; }
+
+.field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.field-qty { flex: 0 0 80px; }
+
+.field-label {
+  font-size: 13px;
+  font-weight: 450;
+  color: #303030;
+  line-height: 20px;
+}
+
+.field-help {
+  font-size: 13px;
+  font-weight: 450;
+  color: #616161;
+  line-height: 20px;
+}
+
+/* Price value input with affix */
+.price-value-wrap { position: relative; }
+.price-value-wrap.has-prefix input { padding-left: 22px; }
+.price-value-wrap.has-suffix input { padding-right: 26px; }
+.price-affix {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #616161;
+  pointer-events: none;
+}
+.price-affix.prefix { left: 10px; }
+.price-affix.suffix { right: 10px; }
+
+/* ── Tier badge button (per-tier "Add badge" / saved badge) ──── */
+.tier-badge-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 28px;
+}
+
+.tier-badge-btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 450;
+  line-height: 20px;
+  border: none;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+
+/* Default "Add badge" state */
+.tier-badge-btn.add {
+  background: #f1f1f1;
+  color: #303030;
+}
+.tier-badge-btn.add:hover,
+.tier-badge-btn.add:active { background: #ebebeb; }
+
+.tier-badge-btn.add .plus-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0;
+}
+
+/* Saved badge state — color comes from inline styles */
+.tier-badge-btn.saved { /* bg + color set inline */ }
+
+/* ── Add tier button ──────────────────────────────── */
+.add-tier-box {
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.add-tier-btn {
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  padding: 12px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  color: #303030;
+  transition: background 0.12s;
+  border-radius: 0;
+}
+
+.add-tier-btn:hover { background: #f7f7f7; }
+
+.add-tier-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #303030;
+}
+
+/* ── Checkbox ─────────────────────────────────────── */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-row input[type=checkbox] {
+  width: 16px;
+  height: 16px;
+  accent-color: #303030;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+  border-radius: 4px;
+  border: 0.66px solid #8a8a8a;
+}
+
+.checkbox-label { font-size: 13px; font-weight: 450; color: #303030; line-height: 20px; }
+
+/* Help text below a checkbox label, indented to align with the label text
+   (skips the 16px checkbox + 8px gap). Mirrors Polaris HelpText pattern. */
+.checkbox-group { display: flex; flex-direction: column; gap: 4px; }
+.checkbox-help {
+  font-size: 13px;
+  font-weight: 450;
+  color: #616161;
+  line-height: 20px;
+  margin: 0 0 0 24px;
+}
+
+/* ── Display field (per-tier subtitle/price/etc.) ─── */
+.display-field { display: flex; flex-direction: column; gap: 4px; position: relative; }
+
+.display-field-label-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.display-field-label-row span {
+  font-size: 13px;
+  font-weight: 450;
+  color: #303030;
+  line-height: 20px;
+}
+
+.var-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+
+.var-icon-btn:hover { background: rgba(0,0,0,0.05); }
+
+/* ── Action list popover ──────────────────────────── */
+.action-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px -2px rgba(26,26,26,0.2),
+    inset 1px 0 0 0 rgba(0,0,0,0.13),
+    inset -1px 0 0 0 rgba(0,0,0,0.13),
+    inset 0 -1px 0 0 rgba(0,0,0,0.17),
+    inset 0 1px 0 0 rgba(204,204,204,0.5);
+  z-index: 200;
+  min-width: 120px;
+  padding: 6px;
+  display: none;
+}
+
+.action-list.open { display: block; }
+
+.action-list-item {
+  padding: 6px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 450;
+  color: #303030;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+
+.action-list-item:hover { background: #f7f7f7; }
+
+/* Tier btn group wrapper needs relative for popover */
+.tier-btn-group {
+  position: relative;
+}
+
+/* ── Tooltip ──────────────────────────────────────── */
+.tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 450;
+  color: #303030;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  box-shadow:
+    0 4px 6px -2px rgba(26,26,26,0.2),
+    inset 1px 0 0 0 rgba(0,0,0,0.13),
+    inset -1px 0 0 0 rgba(0,0,0,0.13),
+    inset 0 -1px 0 0 rgba(0,0,0,0.17),
+    inset 0 1px 0 0 rgba(204,204,204,0.5);
+  z-index: 300;
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #fff;
+}
+
+.tooltip-wrap:hover .tooltip { opacity: 1; }
+
+/* Var dropdown */
+.var-dropdown {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 9999;
+  min-width: 200px;
+  padding: 4px 0;
+  display: none;
+}
+
+.var-dropdown.open { display: block; }
+
+.var-group-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a8a8a;
+  padding: 8px 12px 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.var-group + .var-group { border-top: 1px solid #f1f1f1; }
+
+.var-item {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 450;
+  color: #303030;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.var-item:hover { background: #f7f7f7; }
+
+/* ── Preview card ─────────────────────────────────── */
+.preview-card { position: sticky; top: 32px; }
+.preview-label { font-size: 13px; font-weight: 650; color: #303030; }
+
+/* Customizable preview tokens. Defaults match the original Figma design.
+   Using space-separated channels so they compose with `rgb(R G B / A)` syntax. */
+.bundle-list {
+  --fs-title: 16px;
+  --fs-price: 16px;
+  --fs-other: 14px;
+  --fs-bundle-title: 20px;
+  --c-bg-rgb: 255 255 255;
+  --c-text-rgb: 40 42 44;
+  --c-active-rgb: 40 42 44;
+  --c-active-bg-rgb: 255 255 255;
+  --c-error-rgb: 190 20 20;
+  --card-radius: 0px;
+  --badge-radius: 0px;
+  --title-badge-radius: 0px;
+  --thumb-radius: 0px;
+  --select-radius: 0px;
+  --select-pad-left: 16px;
+  --select-pad-right: 12px;
+  /* Tier-to-tier gap. Larger when any tier shows a price badge so badges
+     don't visually crash into the next card. Exposed as a custom property
+     because the bundle title's margin-top derives from it (see below). */
+  --bundle-gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--bundle-gap);
+}
+.bundle-list.has-badge { --bundle-gap: calc(var(--fs-other) / 2 + 7px); }
+
+/* Bundle-level title, shown above the tiers when "Custom wording → Title"
+   is non-empty. Sits inside .bundle-list as the first child so it inherits
+   the same custom CSS variables. Line-height tracks font-size with a constant
+   +6px offset (20/26 → 24/30 → 14/20…) per Figma spec — same pattern as the
+   tier title/sub texts. */
+.b-bundle-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: var(--fs-bundle-title);
+  line-height: calc(1em + 6px);
+  font-weight: 600;
+  color: rgb(var(--c-text-rgb));
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Title → first tier gap is exactly 16px (Figma "Header Bundles" pb-16),
+   regardless of the bundle-list's tier-to-tier gap (10px default, more when
+   price badges are present). The selector targets whatever follows the title
+   and overrides the inherited flex gap with an absolute margin. */
+.b-bundle-title + * { margin-top: calc(16px - var(--bundle-gap)); }
+
+.b-card {
+  display: flex;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: var(--card-radius);
+  /* 1px border at all times. The visual "2px" of an active card is achieved
+     by adding a 1px inset box-shadow on top, which keeps layout stable and
+     allows the upgrade to animate smoothly. */
+  border: 1px solid rgb(var(--c-text-rgb) / 0.2);
+  box-shadow: inset 0 0 0 0 transparent;
+  background: rgb(var(--c-bg-rgb));
+  cursor: pointer;
+  position: relative;
+  min-height: 48px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.b-card:not(.active):hover {
+  border-color: rgb(var(--c-text-rgb) / 0.4);
+}
+
+.b-card.active {
+  border-color: rgb(var(--c-active-rgb));
+  background: rgb(var(--c-active-bg-rgb));
+  box-shadow: inset 0 0 0 1px rgb(var(--c-active-rgb));
+}
+
+/* Radio (Figma: 20×20 round checkbox-style) */
+.b-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1.111px solid rgb(var(--c-text-rgb) / 0.4);
+  background: rgb(var(--c-bg-rgb));
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+}
+
+.b-card.active .b-radio {
+  background: rgb(var(--c-active-rgb));
+  border-color: rgb(var(--c-active-rgb));
+}
+
+.b-radio-check {
+  width: 11px;
+  height: 8px;
+  display: none;
+}
+
+.b-card.active .b-radio-check { display: block; }
+
+/* Hide the radio column when "Show checkbox" is off */
+.bundle-list.no-checkbox .b-radio { display: none; }
+
+.b-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.b-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.b-name {
+  font-size: var(--fs-title);
+  font-weight: 600;
+  line-height: calc(1em + 6px);
+  color: rgb(var(--c-text-rgb));
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.b-title-badge {
+  font-size: var(--fs-other);
+  font-weight: 600;
+  line-height: calc(1em + 6px);
+  padding: 2px 9px;
+  border-radius: var(--title-badge-radius);
+  white-space: nowrap;
+  /* background + color set inline per tier from titleBadge data */
+}
+
+.b-sub {
+  font-size: var(--fs-other);
+  font-weight: 400;
+  line-height: calc(1em + 6px);
+  color: rgb(var(--c-text-rgb) / 0.75);
+  padding-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.b-price {
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.b-price-main-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.b-price-top {
+  font-size: var(--fs-other);
+  font-weight: 400;
+  line-height: calc(1em + 6px);
+  color: rgb(var(--c-text-rgb) / 0.75);
+}
+
+.b-price-main {
+  font-size: var(--fs-price);
+  font-weight: 600;
+  line-height: calc(1em + 6px);
+  color: rgb(var(--c-text-rgb));
+}
+
+.b-price-unit-lbl {
+  font-size: var(--fs-other);
+  font-weight: 400;
+  line-height: calc(1em + 6px);
+  color: rgb(var(--c-text-rgb) / 0.75);
+}
+
+.b-price-bottom {
+  font-size: var(--fs-other);
+  font-weight: 400;
+  line-height: calc(1em + 6px);
+  color: rgb(var(--c-text-rgb) / 0.75);
+  padding-top: 2px;
+}
+
+.b-badge {
+  position: absolute;
+  top: calc(-0.5lh - 1px);
+  right: 15px;
+  font-size: var(--fs-other);
+  font-weight: 600;
+  line-height: calc(1em + 6px);
+  padding: 2px 9px;
+  white-space: nowrap;
+  border-radius: var(--badge-radius);
+  /* background + color set inline per tier */
+}
+
+/* ── Per-item variants (toggled by "Enable per-item variants" checkbox) ──
+   Adapted from bundle-card-prototype-v1_5. Each tier with variants enabled
+   gets a stack of qty × variant rows under its header. Selects stay side-by-
+   side until any of them would shrink below 160px min-width, then all of
+   them stack into one column at once (all-or-nothing via container query). */
+.b-card.has-variants {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+
+/* When .has-variants is active, the header (radio + info + price) needs to
+   sit in its own row instead of being a direct flex child of .b-card. */
+.b-card.has-variants .b-header-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.b-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Left-align with title text: radio (20px) + radio margin-right (16px) */
+  padding-left: 36px;
+}
+.bundle-list.no-checkbox .b-card.has-variants .b-variants { padding-left: 0; }
+
+.b-variants-divider {
+  height: 1px;
+  background: rgb(var(--c-text-rgb) / 0.1);
+  width: 100%;
+}
+
+.b-variant {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.b-variant-thumb {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  background-color: rgb(var(--c-text-rgb) / 0.05);
+  border-radius: var(--thumb-radius);
+}
+
+/* Options column (right of thumbnail) — selects + optional error message */
+.b-variant-options {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Container query host: watches inline-size to decide if selects fit side-by-side */
+.b-selects-container {
+  container-type: inline-size;
+  width: 100%;
+}
+
+.b-selects-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+/* Wrapper around one select + its (optional) inline error message. The select
+   cell occupies a grid track, and its error message stacks below the select
+   without affecting the row's container-query inline-size. */
+.b-select-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.b-variant-error {
+  display: none;
+  align-items: flex-start;
+  gap: 4px;
+  padding-top: 4px;
+  min-width: 0;
+}
+.b-select-cell.is-error .b-variant-error { display: flex; }
+
+.b-variant-error-icon {
+  width: 20px;
+  height: 20px;
+  color: rgb(var(--c-error-rgb));
+  flex-shrink: 0;
+}
+.b-variant-error-text {
+  font-size: var(--fs-other);
+  line-height: calc(1em + 6px);
+  color: rgb(var(--c-error-rgb));
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Custom select (pseudo styling over native <select>). All colors derive
+   from --c-text-rgb / --c-active-bg-rgb / --c-error-rgb with opacity
+   multipliers mirroring Figma's Polaris token system:
+     bg = active-bg @ 1.0 (variants only render inside the active tier, so
+          their surface should match the tier's active background)
+     border default = text @ 0.4
+     border focus halo = text @ 0.2 (outline)
+     label text = text @ 0.75
+     value + chevron = text @ 1.0 */
+.b-select {
+  position: relative;
+  background: rgb(var(--c-active-bg-rgb));
+  border: 1px solid rgb(var(--c-text-rgb) / 0.4);
+  border-radius: var(--select-radius);
+  padding: 8px var(--select-pad-right) 8px var(--select-pad-left);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+  min-width: 0;
+}
+.b-select:hover { border-color: rgb(var(--c-text-rgb)); }
+.b-select:focus-within {
+  border: 2px solid rgb(var(--c-text-rgb));
+  padding: 7px calc(var(--select-pad-right) - 1px) 7px calc(var(--select-pad-left) - 1px);
+  outline: 2px solid rgb(var(--c-text-rgb) / 0.2);
+  outline-offset: 0;
+}
+.b-select.is-error {
+  background: rgb(var(--c-error-rgb) / 0.05);
+  border: 2px solid rgb(var(--c-error-rgb));
+  padding: 7px calc(var(--select-pad-right) - 1px) 7px calc(var(--select-pad-left) - 1px);
+}
+.b-select.is-error:focus-within {
+  outline: 2px solid rgb(var(--c-error-rgb) / 0.2);
+}
+
+.b-select-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.b-select-label {
+  font-size: calc(var(--fs-other) - 4px);
+  line-height: calc(1em + 6px);
+  color: rgb(var(--c-text-rgb) / 0.75);
+  margin: 0;
+}
+
+.b-select-value {
+  font-size: var(--fs-other);
+  line-height: calc(1em + 6px);
+  color: rgb(var(--c-text-rgb));
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.b-select-chevron {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: rgb(var(--c-text-rgb));
+}
+
+/* Native select sits invisibly on top to provide real interactivity */
+.b-select select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.preview-helper { font-size: 13px; color: #616161; line-height: 20px; }
+.preview-helper a { color: #005bd3; text-decoration: underline; }
+
+/* ── Customize card ───────────────────────────────── */
+.customize-card .card-section {
+  padding: 0;
+  gap: 0;
+}
+
+.customize-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 12px 16px 12px;
+}
+
+.customize-section + .customize-divider { margin-top: 0; }
+
+.customize-divider {
+  height: 1px;
+  background: #ebebeb;
+  margin: 0 12px;
+}
+
+.customize-title {
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 20px;
+  color: #303030;
+}
+
+/* Row layout: 100px label + flexible control */
+.customize-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.customize-row-label {
+  width: 100px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 16px;
+  color: #303030;
+}
+
+.customize-row-control {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 2px;
+}
+
+/* Range slider */
+.range-wrap { flex: 1; min-width: 0; display: flex; align-items: center; height: 20px; }
+
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  /* Track gradient: filled portion is solid #303030; remaining is dotted via CSS bg trick */
+  --range-pct: 0%;
+}
+
+/* WebKit track */
+.range-slider::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background:
+    linear-gradient(to right, #303030 0%, #303030 var(--range-pct), transparent var(--range-pct), transparent 100%),
+    repeating-linear-gradient(to right, #8a8a8a 0 2px, transparent 2px 4px);
+  background-position: 0 center, 0 center;
+  background-size: 100% 3px, 100% 3px;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #303030;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #303030, 0 1px 2px rgba(0, 0, 0, 0.2);
+  margin-top: -6.5px; /* center on 3px track */
+  cursor: pointer;
+}
+
+/* Firefox track */
+.range-slider::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(to right, #8a8a8a 0 2px, transparent 2px 4px);
+}
+.range-slider::-moz-range-progress {
+  height: 3px;
+  border-radius: 2px;
+  background: #303030;
+}
+.range-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #303030;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #303030, 0 1px 2px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+/* Numeric input on the right of the slider */
+.range-number {
+  width: 70px;
+  flex-shrink: 0;
+  position: relative;
+}
+.range-number input {
+  width: 100%;
+  padding-right: 28px;
+  text-align: left;
+}
+/* When there's no suffix span, reset the padding so the value is centered */
+.range-number:not(:has(.suffix)) input { padding-right: 12px; }
+.range-number .suffix {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #616161;
+  pointer-events: none;
+}
+
+/* Toggle switch */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.toggle-row .label {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 16px;
+  color: #303030;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  background: #b5b5b5;
+  border-radius: 6px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  padding: 0;
+}
+
+.toggle-switch.on { background: #303030; }
+
+.toggle-switch::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #fdfdfd;
+  transition: transform 0.15s;
+}
+.toggle-switch.on::before { transform: translateX(12px); }
+
+/* Color input row */
+.color-input-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 0.66px solid #8a8a8a;
+  background: #fdfdfd;
+  height: 32px;
+  /* Container itself — input lives inside on the swatch */
+}
+
+.color-input-pill:focus-within {
+  border-color: #005bd3;
+  box-shadow: 0 0 0 3px rgba(0, 91, 211, 0.15);
+}
+
+.color-pill-swatch {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 0.66px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+  cursor: pointer;
+  overflow: hidden;
+  /* Backed by inline `background` set from JS */
+}
+
+/* The native picker covers only the swatch — clicks outside the swatch
+   go to the hex text field, not the picker. */
+.color-pill-swatch input[type=color] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Hex text — strip all global input chrome */
+input.color-pill-hex {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 450;
+  line-height: 20px;
+  color: #303030;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  text-transform: uppercase;
+  width: auto;
+  border-radius: 0;
+}
+
+input.color-pill-hex:focus {
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+/* ── Badge Modal ──────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 620px;
+  max-width: 100%;
+  overflow: hidden;
+  box-shadow:
+    0 20px 20px -8px rgba(26, 26, 26, 0.28),
+    inset 1px 0 0 0 rgba(0, 0, 0, 0.13),
+    inset -1px 0 0 0 rgba(0, 0, 0, 0.17),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.17),
+    inset 0 1px 0 0 rgba(204, 204, 204, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  background: #f3f3f3;
+  border-bottom: 1px solid #e3e3e3;
+  padding: 12px 12px 12px 16px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.modal-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 20px;
+  color: #303030;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #303030;
+  transition: background 0.12s;
+}
+
+.modal-close:hover { background: rgba(0, 0, 0, 0.05); }
+
+.modal-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-footer {
+  background: #fff;
+  border-top: 1px solid #e3e3e3;
+  padding: 16px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* When there's no Remove button, the right group occupies the full row */
+.modal-footer.no-remove { justify-content: flex-end; }
+
+.modal-footer-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-btn {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+
+.modal-btn-secondary {
+  background: #fff;
+  color: #303030;
+  box-shadow:
+    inset 0 -1px 0 0 #b5b5b5,
+    inset -1px 0 0 0 #e3e3e3,
+    inset 1px 0 0 0 #e3e3e3,
+    inset 0 1px 0 0 #e3e3e3;
+}
+.modal-btn-secondary:hover { background: #f7f7f7; }
+
+.modal-btn-critical {
+  background: #fff;
+  color: #8e1f0b;
+  box-shadow:
+    inset 0 -1px 0 0 #b5b5b5,
+    inset -1px 0 0 0 #e3e3e3,
+    inset 1px 0 0 0 #e3e3e3,
+    inset 0 1px 0 0 #e3e3e3;
+}
+.modal-btn-critical:hover { background: #fff5f5; }
+
+.modal-btn-primary {
+  background: #303030;
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 0 #000,
+    inset 0 -1px 0 1px #000,
+    inset -2px 0 0 0 rgba(255, 255, 255, 0.2),
+    inset 2px 0 0 0 rgba(255, 255, 255, 0.2),
+    inset 0 2px 0 0 rgba(255, 255, 255, 0.2);
+}
+.modal-btn-primary:hover { background: #1a1a1a; }
+
+.modal-btn-primary:disabled {
+  background: rgba(0, 0, 0, 0.17);
+  color: #fff;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Modal field with counter */
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.modal-field-label-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modal-field-label-row > span {
+  font-size: 13px;
+  font-weight: 450;
+  color: #303030;
+  line-height: 20px;
+}
+
+.modal-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.modal-input-wrap input {
+  padding-right: 48px; /* space for counter */
+}
+
+.input-counter {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #616161;
+  pointer-events: none;
+}
+
+.modal-helper {
+  font-size: 13px;
+  color: #616161;
+  line-height: 20px;
+}
+
+/* Colors row */
+.color-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.color-field { display: flex; flex-direction: column; gap: 4px; }
+
+.color-field-label {
+  font-size: 13px;
+  font-weight: 450;
+  color: #303030;
+  line-height: 20px;
+}
+
+.color-input-row { display: flex; gap: 4px; align-items: stretch; }
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 0.66px solid #8a8a8a;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.color-swatch input[type=color] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hex-input-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.hex-input-wrap .prefix {
+  position: absolute;
+  left: 12px;
+  font-size: 13px;
+  color: #616161;
+  pointer-events: none;
+}
+
+.hex-input-wrap input {
+  padding-left: 22px;
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- LEFT: stacked config cards -->
+  <div class="left-stack">
+
+  <div class="card">
+    <div class="card-section">
+
+      <div class="card-header">
+        <div class="card-title">Quantity bundle</div>
+        <div class="card-subtitle">Configure tiers, pricing and display settings.</div>
+      </div>
+
+      <!-- Template -->
+      <div class="field">
+        <div class="field-label">Template</div>
+        <select id="contentTplSelect" onchange="applyContentTemplate(this.value)">
+          <option value="detailed">Detailed</option>
+          <option value="standard">Standard</option>
+          <option value="minimal">Minimal</option>
+        </select>
+      </div>
+
+      <!-- Tier boxes -->
+      <div class="tier-boxes" id="tierBoxes"></div>
+
+      <!-- Add tier -->
+      <div class="add-tier-box">
+        <button class="add-tier-btn" onclick="addTier()">
+          <span class="add-tier-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M10 7v6M7 10h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </span>
+          Add tier
+        </button>
+      </div>
+
+      <!-- Selected by default -->
+      <div class="field">
+        <div class="field-label">Selected by default</div>
+        <select id="defaultTierSelect" onchange="onDefaultTierChange()"></select>
+      </div>
+
+      <!-- Enable per-item variants -->
+      <div class="checkbox-group">
+        <label class="checkbox-row">
+          <input type="checkbox" id="cbPerItemVariants" onchange="renderPreview()">
+          <span class="checkbox-label">Enable per-item variants</span>
+        </label>
+        <p class="checkbox-help">Customers can choose a variant for each item in a tier.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Customize card -->
+  <div class="card customize-card">
+    <div class="card-section">
+
+      <!-- Custom wording -->
+      <div class="customize-section">
+        <div class="customize-title">Custom wording</div>
+
+        <div class="field">
+          <div class="field-label">Title</div>
+          <input type="text" id="bundleTitleInput" value=""
+            oninput="onBundleTitleInput(this.value)" placeholder="">
+        </div>
+
+        <div class="field">
+          <div class="field-label">Error message</div>
+          <input type="text" id="errorMessageInput" value="Variant unavailable"
+            oninput="onErrorMessageInput(this.value)" placeholder="Variant unavailable">
+          <div class="field-help">Appears when the selected variant is unavailable.</div>
+        </div>
+      </div>
+
+      <!-- Layout & Style -->
+      <div class="customize-section">
+        <div class="customize-title">Layout & Style</div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Tier title font size</span>
+          <div class="customize-row-control">
+            <div class="range-wrap">
+              <input type="range" class="range-slider" id="rgTitle" min="10" max="34" step="1" value="16"
+                     oninput="onRangeInput('Title', this.value)">
+            </div>
+            <div class="range-number">
+              <input type="number" id="rgTitleNum" min="10" max="34" step="1" value="16"
+                     oninput="onRangeNumInput('Title', this.value)">
+              <span class="suffix">px</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Price font size</span>
+          <div class="customize-row-control">
+            <div class="range-wrap">
+              <input type="range" class="range-slider" id="rgPrice" min="10" max="34" step="1" value="16"
+                     oninput="onRangeInput('Price', this.value)">
+            </div>
+            <div class="range-number">
+              <input type="number" id="rgPriceNum" min="10" max="34" step="1" value="16"
+                     oninput="onRangeNumInput('Price', this.value)">
+              <span class="suffix">px</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Other font size</span>
+          <div class="customize-row-control">
+            <div class="range-wrap">
+              <input type="range" class="range-slider" id="rgOther" min="10" max="34" step="1" value="14"
+                     oninput="onRangeInput('Other', this.value)">
+            </div>
+            <div class="range-number">
+              <input type="number" id="rgOtherNum" min="10" max="34" step="1" value="14"
+                     oninput="onRangeNumInput('Other', this.value)">
+              <span class="suffix">px</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Title font size</span>
+          <div class="customize-row-control">
+            <div class="range-wrap">
+              <input type="range" class="range-slider" id="rgBundleTitle" min="12" max="34" step="1" value="20"
+                     oninput="onRangeInput('BundleTitle', this.value)">
+            </div>
+            <div class="range-number">
+              <input type="number" id="rgBundleTitleNum" min="12" max="34" step="1" value="20"
+                     oninput="onRangeNumInput('BundleTitle', this.value)">
+              <span class="suffix">px</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Corner radius</span>
+          <div class="customize-row-control">
+            <div class="range-wrap">
+              <input type="range" class="range-slider" id="rgCorner" min="0" max="100" step="20" value="0"
+                     oninput="onCornerInput(this.value)">
+            </div>
+            <div class="range-number">
+              <input type="number" id="rgCornerNum" min="0" max="100" step="20" value="0"
+                     oninput="onCornerNumInput(this.value)">
+              <span class="suffix">%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <span class="label">Show checkbox</span>
+          <button type="button" class="toggle-switch on" id="tgCheckbox" onclick="toggleCheckbox()" aria-pressed="true"></button>
+        </div>
+      </div>
+
+      <div class="customize-divider"></div>
+
+      <!-- Colors -->
+      <div class="customize-section">
+        <div class="customize-title">Colors</div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Active</span>
+          <div class="color-input-pill">
+            <span class="color-pill-swatch" id="swActive">
+              <input type="color" id="cpActive" oninput="onColorPicker('Active', this.value)">
+            </span>
+            <input type="text" class="color-pill-hex" id="hxActive" maxlength="7"
+                   oninput="onColorHex('Active', this.value)">
+          </div>
+        </div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Active background</span>
+          <div class="color-input-pill">
+            <span class="color-pill-swatch" id="swActiveBg">
+              <input type="color" id="cpActiveBg" oninput="onColorPicker('ActiveBg', this.value)">
+            </span>
+            <input type="text" class="color-pill-hex" id="hxActiveBg" maxlength="7"
+                   oninput="onColorHex('ActiveBg', this.value)">
+          </div>
+        </div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Text</span>
+          <div class="color-input-pill">
+            <span class="color-pill-swatch" id="swText">
+              <input type="color" id="cpText" oninput="onColorPicker('Text', this.value)">
+            </span>
+            <input type="text" class="color-pill-hex" id="hxText" maxlength="7"
+                   oninput="onColorHex('Text', this.value)">
+          </div>
+        </div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Background</span>
+          <div class="color-input-pill">
+            <span class="color-pill-swatch" id="swBg">
+              <input type="color" id="cpBg" oninput="onColorPicker('Bg', this.value)">
+            </span>
+            <input type="text" class="color-pill-hex" id="hxBg" maxlength="7"
+                   oninput="onColorHex('Bg', this.value)">
+          </div>
+        </div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Error message</span>
+          <div class="color-input-pill">
+            <span class="color-pill-swatch" id="swError">
+              <input type="color" id="cpError" oninput="onColorPicker('Error', this.value)">
+            </span>
+            <input type="text" class="color-pill-hex" id="hxError" maxlength="7"
+                   oninput="onColorHex('Error', this.value)">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Additional prototype settings card -->
+  <div class="card customize-card">
+    <div class="card-section">
+      <div class="customize-section">
+        <div class="customize-title">Additional prototype settings</div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Style template</span>
+          <div class="customize-row-control">
+            <select id="styleTplSelect" class="customize-select" onchange="applyStyleTemplate(this.value)">
+              <option value="default">Default</option>
+              <option value="rounded-soft">Rounded &amp; soft</option>
+              <option value="bold-dark">Bold dark</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Select count</span>
+          <div class="customize-row-control">
+            <div class="range-wrap">
+              <input type="range" class="range-slider" id="rgSelectCount" min="1" max="3" step="1" value="2"
+                     oninput="onSelectCountInput(this.value)">
+            </div>
+            <div class="range-number">
+              <input type="number" id="rgSelectCountNum" min="1" max="3" step="1" value="2"
+                     oninput="onSelectCountNumInput(this.value)">
+            </div>
+          </div>
+        </div>
+
+        <div class="customize-row">
+          <span class="customize-row-label">Preview card background</span>
+          <div class="color-input-pill">
+            <span class="color-pill-swatch" id="swPreviewBg">
+              <input type="color" id="cpPreviewBg" oninput="onColorPicker('PreviewBg', this.value)">
+            </span>
+            <input type="text" class="color-pill-hex" id="hxPreviewBg" maxlength="7"
+                   oninput="onColorHex('PreviewBg', this.value)">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  </div><!-- /.left-stack -->
+
+  <!-- RIGHT: Preview card -->
+  <div class="card preview-card">
+    <div class="card-section">
+      <div class="preview-label">Preview</div>
+      <div class="bundle-list" id="previewList"></div>
+      <p class="preview-helper"><a href="#">Use the theme editor</a> to preview the offer and customize the design.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PLACEHOLDER_PRICE = 29.99;
+/* Unit price (measurement-based) is derived from item price:
+   item $29.99 / Amount 1kg (1000g) × Base measure 100g → ≈ $3.00 / 100g.
+   Shopify exposes this via ProductVariant.contextualPricing.unitPrice when the
+   merchant has unit pricing configured on the variant. */
+const UNIT_AMOUNT       = 1000; // 1 kg in grams
+const UNIT_BASE_MEASURE = 100;  // 100 g
+const UNIT_RATIO        = UNIT_BASE_MEASURE / UNIT_AMOUNT; // 0.1
+const fmt = p => '$' + Math.abs(p).toFixed(2);
+
+/* Per-tier display fields. Each tier carries its own subtitle / price-area
+   templates plus two independent badge slots (titleBadge inline next to the
+   title; priceBadge floating top-right of the card). */
+const TITLE_BADGE_DEFAULT  = { bg: '#f4f4f4', text: '#5b5d5e' };
+const PRICE_BADGE_DEFAULT  = { bg: '#dc1e0a', text: '#ffffff' };
+
+function makeTierDefaults(extra) {
+  return {
+    title: '1 Pack',
+    qty: 1,
+    method: 0,
+    value: 0,
+    subtitle:    '{{total_price}} total',
+    priceMain:   '{{item_price}}',
+    priceSub:    '',
+    pricePrefix: '',
+    priceSuffix: '/ ea',
+    titleBadge:  null,
+    priceBadge:  null,
+    ...(extra || {}),
+  };
+}
+
+let tiers = [
+  makeTierDefaults({
+    title: 'Buy 1',  qty: 1, method: 0, value: 0,
+    subtitle: '2-week supply',
+    priceSub: '{{total_price}} total',
+    pricePrefix: '',
+    titleBadge: { label: '250g', bg: TITLE_BADGE_DEFAULT.bg, text: TITLE_BADGE_DEFAULT.text },
+  }),
+  makeTierDefaults({
+    title: 'Buy 2', qty: 2, method: 1, value: 10,
+    subtitle: '4-week supply',
+    priceSub: '{{total_price}} total',
+    pricePrefix: '{{orig_item_price}}',
+    titleBadge: { label: '500g', bg: TITLE_BADGE_DEFAULT.bg, text: TITLE_BADGE_DEFAULT.text },
+    priceBadge: { label: 'Save {{amount_saved}}', bg: PRICE_BADGE_DEFAULT.bg, text: PRICE_BADGE_DEFAULT.text },
+  }),
+  makeTierDefaults({
+    title: 'Buy 3', qty: 3, method: 1, value: 20,
+    subtitle: '6-week supply',
+    priceSub: '{{total_price}} total',
+    pricePrefix: '{{orig_item_price}}',
+    titleBadge: { label: '750g', bg: TITLE_BADGE_DEFAULT.bg, text: TITLE_BADGE_DEFAULT.text },
+    priceBadge: { label: 'Save {{amount_saved}}', bg: PRICE_BADGE_DEFAULT.bg, text: PRICE_BADGE_DEFAULT.text },
+  }),
+];
+
+let defaultTierIndex = 0;
+let selectedPreview  = 0;
+
+/* ── Customize state ───────────────────────────────── */
+const customize = {
+  bundleTitle: '',         // Bundle-level title text; empty = hidden in preview
+  errorMessage: '',        // Custom error text; empty = fallback to ERROR_MESSAGE_DEFAULT
+  fsBundleTitle: 20,       // Bundle title font size (12–34, default 20px from Figma)
+  fsTitle: 16,
+  fsPrice: 16,
+  fsOther: 14,
+  cornerRadius: 0,        // 0–100 in steps of 20 (percent)
+  showCheckbox: true,
+  bg: '#ffffff',
+  text: '#282a2c',
+  active: '#282a2c',
+  activeBg: '#ffffff',
+  error: '#be1414',       // Per-item variants error state (Figma text-critical)
+  previewBg: '#ffffff',
+};
+
+const ERROR_MESSAGE_DEFAULT = 'Variant unavailable';
+
+/* Corner radius mapping: percent → { card, thumb, select, badge } px values
+   plus optional select padding override (padL/padR). Per Figma spec, the
+   100% step uses a pill-shaped select that needs extra right padding so
+   the chevron doesn't crowd the rounded edge. Other steps fall back to
+   the default 16/12 select padding. */
+const RADIUS_MAP = {
+  0:   { card: 0,  thumb: 0, select: 0,     badge: 0 },
+  20:  { card: 8,  thumb: 4, select: 4,     badge: 4 },
+  40:  { card: 12, thumb: 8, select: 8,     badge: 6 },
+  60:  { card: 16, thumb: 8, select: 12,    badge: 8 },
+  80:  { card: 16, thumb: 8, select: 16,    badge: 10 },
+  100: { card: 16, thumb: 8, select: 99999, badge: 99999, padL: 20, padR: 16 },  // 99999 → fully rounded pill (capped by browser); extra left padding for pill aesthetics
+};
+const SELECT_PAD_DEFAULT = { padL: 16, padR: 12 };
+
+/* Style template presets — snapshot of customize values applied via the
+   Style template select. Add new entries here to expose more options. */
+const STYLE_TEMPLATES = {
+  default: {
+    fsBundleTitle: 20,
+    fsTitle: 16,
+    fsPrice: 16,
+    fsOther: 14,
+    cornerRadius: 0,
+    showCheckbox: true,
+    bg: '#ffffff',
+    text: '#282a2c',
+    active: '#282a2c',
+    activeBg: '#ffffff',
+    error: '#be1414',
+    previewBg: '#ffffff',
+  },
+  'rounded-soft': {
+    fsBundleTitle: 20,
+    fsTitle: 16,
+    fsPrice: 16,
+    fsOther: 14,
+    cornerRadius: 40,
+    showCheckbox: true,
+    bg: '#fafaf7',
+    text: '#2a2a2a',
+    active: '#3d6b3d',
+    activeBg: '#eef5ee',
+    error: '#be1414',
+    previewBg: '#ffffff',
+  },
+  'bold-dark': {
+    fsBundleTitle: 24,
+    fsTitle: 18,
+    fsPrice: 18,
+    fsOther: 13,
+    cornerRadius: 20,
+    showCheckbox: false,
+    bg: '#1d1d1f',
+    text: '#f5f5f7',
+    active: '#ffd60a',
+    activeBg: '#2a2a2c',
+    error: '#ff6464',
+    previewBg: '#0f0f10',
+  },
+};
+
+/* Content template presets — each defines exactly 3 tiers (1/2/3 packs).
+   Content templates dictate tier count too: applying one replaces the entire
+   `tiers` array. Per-tier shape uses makeTierDefaults() so any field omitted
+   here falls back to the same defaults a fresh tier would get. */
+const CONTENT_TEMPLATES = {
+  detailed: {
+    tiers: [
+      {
+        title: 'Buy 1', qty: 1, method: 0, value: 0,
+        subtitle: '2-week supply',
+        priceMain: '{{item_price}}',
+        priceSub: '{{total_price}} total',
+        pricePrefix: '',
+        priceSuffix: '/ ea',
+        titleBadge: { label: '250g', bg: TITLE_BADGE_DEFAULT.bg, text: TITLE_BADGE_DEFAULT.text },
+        priceBadge: null,
+      },
+      {
+        title: 'Buy 2', qty: 2, method: 1, value: 10,
+        subtitle: '4-week supply',
+        priceMain: '{{item_price}}',
+        priceSub: '{{total_price}} total',
+        pricePrefix: '{{orig_item_price}}',
+        priceSuffix: '/ ea',
+        titleBadge: { label: '500g', bg: TITLE_BADGE_DEFAULT.bg, text: TITLE_BADGE_DEFAULT.text },
+        priceBadge: { label: 'Save {{amount_saved}}', bg: PRICE_BADGE_DEFAULT.bg, text: PRICE_BADGE_DEFAULT.text },
+      },
+      {
+        title: 'Buy 3', qty: 3, method: 1, value: 20,
+        subtitle: '6-week supply',
+        priceMain: '{{item_price}}',
+        priceSub: '{{total_price}} total',
+        pricePrefix: '{{orig_item_price}}',
+        priceSuffix: '/ ea',
+        titleBadge: { label: '750g', bg: TITLE_BADGE_DEFAULT.bg, text: TITLE_BADGE_DEFAULT.text },
+        priceBadge: { label: 'Save {{amount_saved}}', bg: PRICE_BADGE_DEFAULT.bg, text: PRICE_BADGE_DEFAULT.text },
+      },
+    ],
+  },
+  standard: {
+    tiers: [
+      {
+        title: 'Buy 1', qty: 1, method: 0, value: 0,
+        subtitle: '2-week supply',
+        priceMain: '{{total_price}}', priceSub: '',
+        pricePrefix: '', priceSuffix: '',
+        titleBadge: null, priceBadge: null,
+      },
+      {
+        title: 'Buy 2', qty: 2, method: 1, value: 10,
+        subtitle: '4-week supply',
+        priceMain: '{{total_price}}', priceSub: '{{orig_total_price}}',
+        pricePrefix: '', priceSuffix: '',
+        titleBadge: null,
+        priceBadge: { label: 'Most popular', bg: PRICE_BADGE_DEFAULT.bg, text: PRICE_BADGE_DEFAULT.text },
+      },
+      {
+        title: 'Buy 3', qty: 3, method: 1, value: 20,
+        subtitle: '6-week supply',
+        priceMain: '{{total_price}}', priceSub: '{{orig_total_price}}',
+        pricePrefix: '', priceSuffix: '',
+        titleBadge: null,
+        priceBadge: { label: 'Best value', bg: PRICE_BADGE_DEFAULT.bg, text: PRICE_BADGE_DEFAULT.text },
+      },
+    ],
+  },
+  minimal: {
+    tiers: [
+      {
+        title: 'Buy 1', qty: 1, method: 0, value: 0,
+        subtitle: '',
+        priceMain: '{{total_price}}', priceSub: '',
+        pricePrefix: '', priceSuffix: '',
+        titleBadge: null, priceBadge: null,
+      },
+      {
+        title: 'Buy 2', qty: 2, method: 1, value: 10,
+        subtitle: '',
+        priceMain: '{{total_price}}', priceSub: '',
+        pricePrefix: '{{orig_total_price}}', priceSuffix: '',
+        titleBadge: { label: '-{{discount_pct}}', bg: PRICE_BADGE_DEFAULT.bg, text: PRICE_BADGE_DEFAULT.text },
+        priceBadge: null,
+      },
+      {
+        title: 'Buy 3', qty: 3, method: 1, value: 20,
+        subtitle: '',
+        priceMain: '{{total_price}}', priceSub: '',
+        pricePrefix: '{{orig_total_price}}', priceSuffix: '',
+        titleBadge: { label: '-{{discount_pct}}', bg: PRICE_BADGE_DEFAULT.bg, text: PRICE_BADGE_DEFAULT.text },
+        priceBadge: null,
+      },
+    ],
+  },
+};
+
+function hexToRgbString(hex) {
+  const h = (hex || '').replace('#', '').trim();
+  if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+  const n = parseInt(h, 16);
+  // Space-separated so it composes with `rgb(R G B / A)` modern syntax.
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+}
+
+function setRangeProgress(slider) {
+  const min = +slider.min, max = +slider.max, val = +slider.value;
+  const pct = ((val - min) / (max - min)) * 100;
+  slider.style.setProperty('--range-pct', pct + '%');
+}
+
+function applyCustomize() {
+  const list = document.getElementById('previewList');
+  if (!list) return;
+  list.style.setProperty('--fs-title', customize.fsTitle + 'px');
+  list.style.setProperty('--fs-price', customize.fsPrice + 'px');
+  list.style.setProperty('--fs-other', customize.fsOther + 'px');
+  list.style.setProperty('--fs-bundle-title', customize.fsBundleTitle + 'px');
+
+  const bgRgb = hexToRgbString(customize.bg);
+  const textRgb = hexToRgbString(customize.text);
+  const activeRgb = hexToRgbString(customize.active);
+  const activeBgRgb = hexToRgbString(customize.activeBg);
+  const errorRgb = hexToRgbString(customize.error);
+  if (bgRgb) list.style.setProperty('--c-bg-rgb', bgRgb);
+  if (textRgb) list.style.setProperty('--c-text-rgb', textRgb);
+  if (activeRgb) list.style.setProperty('--c-active-rgb', activeRgb);
+  if (activeBgRgb) list.style.setProperty('--c-active-bg-rgb', activeBgRgb);
+  if (errorRgb) list.style.setProperty('--c-error-rgb', errorRgb);
+
+  // Corner radius: map percent to {card, thumb, select, badge} pixel values.
+  const r = RADIUS_MAP[customize.cornerRadius] || RADIUS_MAP[0];
+  list.style.setProperty('--card-radius', r.card + 'px');
+  list.style.setProperty('--badge-radius', r.badge + 'px');
+  list.style.setProperty('--title-badge-radius', r.badge + 'px');
+  list.style.setProperty('--thumb-radius', r.thumb + 'px');
+  list.style.setProperty('--select-radius', r.select + 'px');
+  // Select padding: only the 100% (pill) step overrides defaults.
+  const padL = (r.padL != null ? r.padL : SELECT_PAD_DEFAULT.padL);
+  const padR = (r.padR != null ? r.padR : SELECT_PAD_DEFAULT.padR);
+  list.style.setProperty('--select-pad-left', padL + 'px');
+  list.style.setProperty('--select-pad-right', padR + 'px');
+
+  list.classList.toggle('no-checkbox', !customize.showCheckbox);
+
+  // Preview card surface: apply on .card (preserves border-radius and shadows),
+  // not on .card-section (which is a square, unrounded child).
+  const previewCard = document.querySelector('.preview-card');
+  if (previewCard) previewCard.style.background = customize.previewBg;
+}
+
+/* Range slider handlers. Read min/max from the slider element itself so
+   each range can have its own bounds (e.g. Bundle title is 12–34, others 10–34). */
+function onRangeInput(key, value) {
+  const slider = document.getElementById('rg' + key);
+  const lo = +slider.min || 10;
+  const hi = +slider.max || 34;
+  const v = clamp(+value || lo, lo, hi);
+  customize['fs' + key] = v;
+  document.getElementById('rg' + key + 'Num').value = v;
+  setRangeProgress(slider);
+  applyCustomize();
+}
+function onRangeNumInput(key, value) {
+  const slider = document.getElementById('rg' + key);
+  const lo = +slider.min || 10;
+  const hi = +slider.max || 34;
+  const v = clamp(+value || lo, lo, hi);
+  customize['fs' + key] = v;
+  slider.value = v;
+  setRangeProgress(slider);
+  applyCustomize();
+}
+function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+/* Bundle-level title text. Empty string = hidden in preview. */
+function onBundleTitleInput(value) {
+  customize.bundleTitle = value || '';
+  renderPreview();
+}
+
+/* Custom error message text. Empty string falls back to ERROR_MESSAGE_DEFAULT
+   so the error state never shows a blank line. */
+function onErrorMessageInput(value) {
+  customize.errorMessage = value || '';
+  renderPreview();
+}
+
+/* Per-item variants: how many selects render per item.
+   Hardcoded min-width 160px (no UI control for that). */
+let selectCount = 2;
+function onSelectCountInput(value) {
+  selectCount = clamp(+value || 1, 1, 3);
+  document.getElementById('rgSelectCountNum').value = selectCount;
+  setRangeProgress(document.getElementById('rgSelectCount'));
+  renderPreview();
+}
+function onSelectCountNumInput(value) {
+  selectCount = clamp(+value || 1, 1, 3);
+  const slider = document.getElementById('rgSelectCount');
+  slider.value = selectCount;
+  setRangeProgress(slider);
+  renderPreview();
+}
+
+/* Corner radius — uses its own range (0–100, step 20). Not a font-size. */
+function snapCorner(v) {
+  const n = clamp(+v || 0, 0, 100);
+  return Math.round(n / 20) * 20;
+}
+function onCornerInput(value) {
+  const v = snapCorner(value);
+  customize.cornerRadius = v;
+  document.getElementById('rgCornerNum').value = v;
+  setRangeProgress(document.getElementById('rgCorner'));
+  applyCustomize();
+}
+function onCornerNumInput(value) {
+  const v = snapCorner(value);
+  customize.cornerRadius = v;
+  const slider = document.getElementById('rgCorner');
+  slider.value = v;
+  setRangeProgress(slider);
+  applyCustomize();
+}
+
+/* Style template — applies a full snapshot of customize values + refreshes UI */
+function applyStyleTemplate(name) {
+  const preset = STYLE_TEMPLATES[name];
+  if (!preset) return;
+  Object.assign(customize, preset);
+  syncCustomizeUI();
+  applyCustomize();
+}
+
+/* Content template — silently replaces the entire `tiers` array (and resets
+   default tier + selected preview to the first tier) and re-renders. Each
+   template entry passes through makeTierDefaults() so any field omitted in the
+   preset definition still gets sensible defaults. */
+function applyContentTemplate(name) {
+  const preset = CONTENT_TEMPLATES[name];
+  if (!preset) return;
+  tiers = preset.tiers.map(t => makeTierDefaults({
+    ...t,
+    titleBadge: t.titleBadge ? { ...t.titleBadge } : null,
+    priceBadge: t.priceBadge ? { ...t.priceBadge } : null,
+  }));
+  defaultTierIndex = 0;
+  selectedPreview = 0;
+  renderTiers();
+}
+
+/* Pull customize values back into all the UI controls (sliders, hex inputs,
+   swatches, toggle). Used after loading a template preset. */
+function syncCustomizeUI() {
+  // Font size sliders + number inputs
+  ['Title', 'Price', 'Other', 'BundleTitle'].forEach(k => {
+    const v = customize['fs' + k];
+    const slider = document.getElementById('rg' + k);
+    const num = document.getElementById('rg' + k + 'Num');
+    if (slider) { slider.value = v; setRangeProgress(slider); }
+    if (num) num.value = v;
+  });
+  // Corner radius
+  const cr = customize.cornerRadius;
+  const crSlider = document.getElementById('rgCorner');
+  const crNum = document.getElementById('rgCornerNum');
+  if (crSlider) { crSlider.value = cr; setRangeProgress(crSlider); }
+  if (crNum) crNum.value = cr;
+  // Toggle
+  const tg = document.getElementById('tgCheckbox');
+  if (tg) {
+    tg.classList.toggle('on', customize.showCheckbox);
+    tg.setAttribute('aria-pressed', String(customize.showCheckbox));
+  }
+  // Color inputs (Bg / Text / Active / ActiveBg / PreviewBg)
+  Object.entries(colorKeyMap).forEach(([key, prop]) => {
+    const hex = customize[prop];
+    const cp = document.getElementById('cp' + key);
+    const hx = document.getElementById('hx' + key);
+    const sw = document.getElementById('sw' + key);
+    if (cp) cp.value = hex;
+    if (hx) hx.value = hex.toUpperCase();
+    if (sw) sw.style.background = hex;
+  });
+}
+
+/* Toggle */
+function toggleCheckbox() {
+  customize.showCheckbox = !customize.showCheckbox;
+  const btn = document.getElementById('tgCheckbox');
+  btn.classList.toggle('on', customize.showCheckbox);
+  btn.setAttribute('aria-pressed', String(customize.showCheckbox));
+  applyCustomize();
+}
+
+/* Color handlers */
+const colorKeyMap = {
+  Bg:        'bg',
+  Text:      'text',
+  Active:    'active',
+  ActiveBg:  'activeBg',
+  Error:     'error',
+  PreviewBg: 'previewBg',
+};
+
+function onColorPicker(key, hex) {
+  const v = (hex || '').toLowerCase();
+  customize[colorKeyMap[key]] = v;
+  document.getElementById('hx' + key).value = v.toUpperCase();
+  document.getElementById('sw' + key).style.background = v;
+  applyCustomize();
+}
+
+function onColorHex(key, raw) {
+  let v = (raw || '').trim();
+  if (v.startsWith('#')) v = v.slice(1);
+  if (!/^[0-9a-fA-F]{6}$/.test(v)) return; // invalid; wait for valid input
+  const hex = '#' + v.toLowerCase();
+  customize[colorKeyMap[key]] = hex;
+  document.getElementById('cp' + key).value = hex;
+  document.getElementById('sw' + key).style.background = hex;
+  applyCustomize();
+}
+
+/* Initialize the Customize UI from defaults */
+function initCustomize() {
+  // Range sliders: visual progress + paired number inputs
+  ['Title', 'Price', 'Other', 'BundleTitle', 'Corner', 'SelectCount'].forEach(k => {
+    const slider = document.getElementById('rg' + k);
+    if (slider) setRangeProgress(slider);
+  });
+
+  // Color inputs: prefill native pickers, hex texts, swatches
+  Object.entries(colorKeyMap).forEach(([key, prop]) => {
+    const hex = customize[prop];
+    document.getElementById('cp' + key).value = hex;
+    document.getElementById('hx' + key).value = hex.toUpperCase();
+    document.getElementById('sw' + key).style.background = hex;
+  });
+
+  applyCustomize();
+}
+
+let openDropdown = null;
+
+/* ── Variable icon SVG ─────────────────────────────── */
+const varIconSVG = `<svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M7 4C5.5 4 4.5 5 4.5 6.5V8.5C4.5 10 3.5 10.5 2.5 10.5C3.5 10.5 4.5 11 4.5 12.5V14.5C4.5 16 5.5 17 7 17" stroke="#616161" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M13 4C14.5 4 15.5 5 15.5 6.5V8.5C15.5 10 16.5 10.5 17.5 10.5C16.5 10.5 15.5 11 15.5 12.5V14.5C15.5 16 14.5 17 13 17" stroke="#616161" stroke-width="1.5" stroke-linecap="round"/>
+</svg>`;
+
+const packageIconSVG = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+  <rect x="3" y="6" width="14" height="11" rx="1.5" stroke="#616161" stroke-width="1.3"/>
+  <path d="M3 9h14" stroke="#616161" stroke-width="1.3"/>
+  <path d="M8 6V4.5a2 2 0 114 0V6" stroke="#616161" stroke-width="1.3"/>
+</svg>`;
+
+const dotsIconSVG = `<svg width="20" height="16" viewBox="0 0 20 20" fill="none">
+  <circle cx="3" cy="10" r="1.5" fill="#616161"/>
+  <circle cx="10" cy="10" r="1.5" fill="#616161"/>
+  <circle cx="17" cy="10" r="1.5" fill="#616161"/>
+</svg>`;
+
+const xIconSVG = `<svg width="20" height="16" viewBox="0 0 20 20" fill="none">
+  <path d="M5.25 5.25l9.5 9.5M14.75 5.25l-9.5 9.5" stroke="#616161" stroke-width="1.5" stroke-linecap="round"/>
+</svg>`;
+
+const plusSmallSVG = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+  <path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+</svg>`;
+
+/* ── Variable groups ───────────────────────────────── */
+function getVarGroups() {
+  return [
+    {
+      label: 'Price',
+      vars: [
+        { name: 'Total price',          token: '{{total_price}}' },
+        { name: 'Item price',           token: '{{item_price}}' },
+        { name: 'Unit price',           token: '{{unit_price}}' },
+        { name: 'Original total price', token: '{{orig_total_price}}' },
+        { name: 'Original item price',  token: '{{orig_item_price}}' },
+        { name: 'Original unit price',  token: '{{orig_unit_price}}' },
+      ]
+    },
+    {
+      label: 'Discount',
+      vars: [
+        { name: 'Discount %',   token: '{{discount_pct}}' },
+        { name: 'Amount saved', token: '{{amount_saved}}' },
+      ]
+    },
+  ];
+}
+
+/* ── Compute tier total ────────────────────────────── */
+function computeTotal(tier) {
+  if (tier.method === 0) return PLACEHOLDER_PRICE * tier.qty;
+  if (tier.method === 3) return tier.value;
+  const orig = PLACEHOLDER_PRICE * tier.qty;
+  if (tier.method === 1) return orig * (1 - tier.value / 100);
+  if (tier.method === 2) return orig - tier.value;
+  return orig;
+}
+
+/* ── Template resolver ─────────────────────────────── */
+function resolve(tpl, vars) {
+  /* Original prices are always struck through to communicate the "was X / now Y"
+     savings pattern. There used to be a toggle for this, but Figma confirmed it
+     should always be on, so the toggle was removed in v7_32. */
+  const s = t => `<s>${t}</s>`;
+  return (tpl || '')
+    .replace(/\{\{total_price\}\}/g,      vars.totalPrice    != null ? fmt(vars.totalPrice)                  : '')
+    .replace(/\{\{item_price\}\}/g,       vars.itemPrice     != null ? fmt(vars.itemPrice)                   : '')
+    .replace(/\{\{unit_price\}\}/g,       vars.unitPrice     != null ? fmt(vars.unitPrice)                   : '')
+    .replace(/\{\{orig_total_price\}\}/g, vars.origTotal     != null ? s(fmt(vars.origTotal))                : '')
+    .replace(/\{\{orig_item_price\}\}/g,  vars.origItemPrice != null ? s(fmt(vars.origItemPrice))            : '')
+    .replace(/\{\{orig_unit_price\}\}/g,  vars.origUnitPrice != null ? s(fmt(vars.origUnitPrice))            : '')
+    .replace(/\{\{discount_pct\}\}/g,     vars.discountPct   != null ? `${vars.discountPct}%`                : '')
+    .replace(/\{\{amount_saved\}\}/g,     vars.amountSaved   != null ? fmt(vars.amountSaved)                 : '');
+}
+
+/* Badge has its own tiny resolver — only 2 tokens, no strikethrough */
+function resolveBadge(tpl, vars) {
+  return (tpl || '')
+    .replace(/\{\{discount_pct\}\}/g, vars.discountPct != null ? `${vars.discountPct}%` : '')
+    .replace(/\{\{amount_saved\}\}/g, vars.amountSaved != null ? fmt(vars.amountSaved)  : '');
+}
+
+/* ── Badge Modal ───────────────────────────────────── */
+let badgeModalTier = null;        // index of tier being edited
+let badgeModalKind = 'price';     // 'title' | 'price' — which slot we're editing
+let lastValidLabel = '';          // last label value that fit the 18-char effective limit
+
+const MAX_LABEL_EFFECTIVE = 18;
+
+/* Each {{variable}} token counts as 3 chars; everything else counts as itself. */
+function effectiveLength(text) {
+  if (!text) return 0;
+  // Sum the lengths of all {{...}} tokens to subtract them, then add 3 per token
+  const tokens = text.match(/\{\{[a-z_]+\}\}/gi) || [];
+  let tokensRawLength = 0;
+  tokens.forEach(t => { tokensRawLength += t.length; });
+  return text.length - tokensRawLength + tokens.length * 3;
+}
+
+/* Enforce 18-char effective max: if the new value overflows, revert to lastValidLabel */
+function enforceLabelMax(input) {
+  if (effectiveLength(input.value) <= MAX_LABEL_EFFECTIVE) {
+    lastValidLabel = input.value;
+    return true;
+  }
+  // Restore previous value and place caret at the end
+  const prev = lastValidLabel;
+  input.value = prev;
+  const pos = prev.length;
+  try { input.setSelectionRange(pos, pos); } catch {}
+  return false;
+}
+
+function openBadgeModal(i, kind) {
+  closeActionLists();
+  badgeModalTier = i;
+  badgeModalKind = (kind === 'title') ? 'title' : 'price';
+
+  const slot = badgeModalKind === 'title' ? 'titleBadge' : 'priceBadge';
+  const isEdit = !!tiers[i][slot];
+  const fallback = badgeModalKind === 'title' ? TITLE_BADGE_DEFAULT : PRICE_BADGE_DEFAULT;
+  const existing = tiers[i][slot] || { label: '', bg: fallback.bg, text: fallback.text };
+
+  document.getElementById('badgeModalTitle').textContent =
+    badgeModalKind === 'title' ? 'Title badge' : 'Price badge';
+
+  document.getElementById('badgeLabelInput').value = existing.label;
+  lastValidLabel = existing.label;
+
+  document.getElementById('badgeBgColor').value = existing.bg;
+  document.getElementById('badgeBgHex').value = existing.bg.replace('#', '').toUpperCase();
+  document.getElementById('badgeTextColor').value = existing.text;
+  document.getElementById('badgeTextHex').value = existing.text.replace('#', '').toUpperCase();
+  document.getElementById('bgSwatch').style.background = existing.bg;
+  document.getElementById('textSwatch').style.background = existing.text;
+
+  // Show Remove only when editing an existing badge
+  const footer = document.getElementById('badgeModalFooter');
+  const removeBtn = document.getElementById('badgeRemoveBtn');
+  if (isEdit) {
+    footer.classList.remove('no-remove');
+    removeBtn.style.display = '';
+  } else {
+    footer.classList.add('no-remove');
+    removeBtn.style.display = 'none';
+  }
+
+  updateBadgeLabelCounter();
+  updateSaveButton();
+  document.getElementById('badgeModal').classList.add('open');
+}
+
+function closeBadgeModal() {
+  document.getElementById('badgeModal').classList.remove('open');
+  closeModalVarDropdown();
+  badgeModalTier = null;
+}
+
+/* Save:
+   - empty label → behaves like Remove (clears the badge)
+   - non-empty label → persists the badge */
+function saveBadge() {
+  if (badgeModalTier == null) return;
+  const slot = badgeModalKind === 'title' ? 'titleBadge' : 'priceBadge';
+  const label = document.getElementById('badgeLabelInput').value.trim();
+  const validBg = isValidHex(document.getElementById('badgeBgHex').value);
+  const validText = isValidHex(document.getElementById('badgeTextHex').value);
+  if (!validBg || !validText) return;
+
+  if (!label) {
+    tiers[badgeModalTier][slot] = null;
+  } else {
+    const bg = '#' + document.getElementById('badgeBgHex').value.trim().toLowerCase();
+    const text = '#' + document.getElementById('badgeTextHex').value.trim().toLowerCase();
+    tiers[badgeModalTier][slot] = { label, bg, text };
+  }
+  closeBadgeModal();
+  renderTiers();
+}
+
+/* Footer Remove button — same as action-list "Remove badge" */
+function onModalRemove() {
+  if (badgeModalTier == null) return;
+  const i = badgeModalTier;
+  const kind = badgeModalKind;
+  closeBadgeModal();
+  removeBadge(i, kind);
+}
+
+function removeBadge(i, kind) {
+  const slot = kind === 'title' ? 'titleBadge' : 'priceBadge';
+  tiers[i][slot] = null;
+  renderTiers();
+}
+
+function onBadgeLabelInput() {
+  const input = document.getElementById('badgeLabelInput');
+  enforceLabelMax(input);
+  updateBadgeLabelCounter();
+  updateSaveButton();
+}
+
+function updateBadgeLabelCounter() {
+  const v = document.getElementById('badgeLabelInput').value;
+  document.getElementById('badgeLabelCounter').textContent = `${effectiveLength(v)}/${MAX_LABEL_EFFECTIVE}`;
+}
+
+/* Save is enabled when colors are valid. Label may be empty (= remove on save). */
+function updateSaveButton() {
+  const validBg = isValidHex(document.getElementById('badgeBgHex').value);
+  const validText = isValidHex(document.getElementById('badgeTextHex').value);
+  document.getElementById('badgeSaveBtn').disabled = !(validBg && validText);
+}
+
+function isValidHex(v) { return /^[0-9a-fA-F]{6}$/.test(v.trim()); }
+
+/* Color <-> hex sync */
+function onBgColorChange(val) {
+  document.getElementById('badgeBgHex').value = val.replace('#', '').toUpperCase();
+  document.getElementById('bgSwatch').style.background = val;
+  updateSaveButton();
+}
+function onBgHexInput(val) {
+  const clean = val.trim();
+  if (isValidHex(clean)) {
+    const hex = '#' + clean.toLowerCase();
+    document.getElementById('badgeBgColor').value = hex;
+    document.getElementById('bgSwatch').style.background = hex;
+  }
+  updateSaveButton();
+}
+function onTextColorChange(val) {
+  document.getElementById('badgeTextHex').value = val.replace('#', '').toUpperCase();
+  document.getElementById('textSwatch').style.background = val;
+  updateSaveButton();
+}
+function onTextHexInput(val) {
+  const clean = val.trim();
+  if (isValidHex(clean)) {
+    const hex = '#' + clean.toLowerCase();
+    document.getElementById('badgeTextColor').value = hex;
+    document.getElementById('textSwatch').style.background = hex;
+  }
+  updateSaveButton();
+}
+
+/* Variable picker inside the modal */
+function toggleModalVarDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('modalVarDropdown');
+  const willOpen = !dd.classList.contains('open');
+  if (!willOpen) { dd.classList.remove('open'); return; }
+  dd.innerHTML = `
+    <div class="var-group">
+      <div class="var-item" onclick="insertBadgeVar('{{discount_pct}}')">Discount %</div>
+      <div class="var-item" onclick="insertBadgeVar('{{amount_saved}}')">Amount saved</div>
+    </div>`;
+  // Position dropdown next to the var icon
+  const btn = document.getElementById('modalVarBtn');
+  const rect = btn.getBoundingClientRect();
+  dd.style.position = 'fixed';
+  dd.style.top = (rect.bottom + 4) + 'px';
+  dd.style.right = (window.innerWidth - rect.right) + 'px';
+  dd.classList.add('open');
+}
+
+function closeModalVarDropdown() {
+  document.getElementById('modalVarDropdown')?.classList.remove('open');
+}
+
+function insertBadgeVar(token) {
+  const input = document.getElementById('badgeLabelInput');
+  const s = input.selectionStart, e = input.selectionEnd;
+  const candidate = input.value.slice(0, s) + token + input.value.slice(e);
+  if (effectiveLength(candidate) > MAX_LABEL_EFFECTIVE) {
+    // Insertion would overflow — ignore it (variable counts as 3 chars).
+    closeModalVarDropdown();
+    return;
+  }
+  input.value = candidate;
+  lastValidLabel = candidate;
+  input.focus();
+  const pos = s + token.length;
+  try { input.setSelectionRange(pos, pos); } catch {}
+  closeModalVarDropdown();
+  updateBadgeLabelCounter();
+  updateSaveButton();
+}
+
+/* Click outside modal closes it; click outside dropdown closes dropdown */
+document.addEventListener('click', (e) => {
+  const overlay = document.getElementById('badgeModal');
+  if (!overlay) return;
+  if (overlay.classList.contains('open') && e.target === overlay) closeBadgeModal();
+  const dd = document.getElementById('modalVarDropdown');
+  if (dd?.classList.contains('open')) {
+    const btn = document.getElementById('modalVarBtn');
+    if (!dd.contains(e.target) && !btn.contains(e.target)) closeModalVarDropdown();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('badgeModal').classList.contains('open')) {
+    closeBadgeModal();
+  }
+});
+
+/* ── Default select ────────────────────────────────── */
+function renderDefaultSelect() {
+  const sel = document.getElementById('defaultTierSelect');
+  sel.innerHTML = tiers.map((t, i) =>
+    `<option value="${i}"${i === defaultTierIndex ? ' selected' : ''}>Tier #${i + 1}</option>`
+  ).join('');
+}
+
+function onDefaultTierChange() {
+  defaultTierIndex = +document.getElementById('defaultTierSelect').value;
+  selectedPreview  = defaultTierIndex;
+  renderTiers();
+}
+
+/* ── Render tier boxes ─────────────────────────────── */
+function renderTiers() {
+  const container = document.getElementById('tierBoxes');
+  container.innerHTML = '';
+
+  tiers.forEach((t, i) => {
+    const isPct    = t.method === 1;
+    const isAmount = t.method === 2;
+    const isFixed  = t.method === 3;
+    const isFull   = t.method === 0;
+    const showPfx  = isAmount || isFixed;
+    const showSfx  = isPct;
+
+    const methodOpts = [
+      ['Full price',     0],
+      ['Percentage off', 1],
+      ['Amount off',     2],
+      ['Fixed amount',   3],
+    ].map(([lbl, val]) =>
+      `<option value="${val}"${t.method === val ? ' selected' : ''}>${lbl}</option>`
+    ).join('');
+
+    /* Label for the value input echoes the Pricing method so the field's
+       purpose is obvious without an explanatory subtitle. Full price has no
+       value input — the right half of the row stays empty. */
+    const valueLabel = isPct    ? 'Percentage off'
+                     : isAmount ? 'Amount off'
+                     : isFixed  ? 'Fixed amount'
+                     : '';
+
+    const valueInput = !isFull ? `
+      <div class="field">
+        <div class="field-label">${valueLabel}</div>
+        <div class="price-value-wrap${showPfx ? ' has-prefix' : ''}${showSfx ? ' has-suffix' : ''}">
+          ${showPfx ? '<span class="price-affix prefix">$</span>' : ''}
+          ${showSfx ? '<span class="price-affix suffix">%</span>' : ''}
+          <input type="number" value="${t.value}" step="${isPct ? '1' : '0.01'}" min="0"
+            oninput="tiers[${i}].value=+this.value||0;renderPreview()">
+        </div>
+      </div>
+    ` : '<div></div>';
+
+    /* Per-tier action list state. The 3-dot menu only exposes Add/Edit —
+       removal happens inside the badge modal (Remove button). Keeps the menu
+       short and prevents accidental destructive clicks. */
+    const hasTitleBadge = !!t.titleBadge;
+    const hasPriceBadge = !!t.priceBadge;
+    const titleBadgeAction = hasTitleBadge
+      ? `<div class="action-list-item" onclick="openBadgeModal(${i},'title');closeActionLists()">Edit title badge</div>`
+      : `<div class="action-list-item" onclick="openBadgeModal(${i},'title');closeActionLists()">Add title badge</div>`;
+    const priceBadgeAction = hasPriceBadge
+      ? `<div class="action-list-item" onclick="openBadgeModal(${i},'price');closeActionLists()">Edit price badge</div>`
+      : `<div class="action-list-item" onclick="openBadgeModal(${i},'price');closeActionLists()">Add price badge</div>`;
+
+    /* Per-tier badge button helpers */
+    const titleBadgeBtn = hasTitleBadge
+      ? `<button class="tier-badge-btn saved"
+            style="background:${t.titleBadge.bg};color:${t.titleBadge.text};"
+            onclick="openBadgeModal(${i},'title')">${escHtml(badgePreviewText(t.titleBadge, t))}</button>`
+      : `<button class="tier-badge-btn add" onclick="openBadgeModal(${i},'title')">
+           <span class="plus-icon">${plusSmallSVG}</span>
+           Add title badge
+         </button>`;
+    const priceBadgeBtn = hasPriceBadge
+      ? `<button class="tier-badge-btn saved"
+            style="background:${t.priceBadge.bg};color:${t.priceBadge.text};"
+            onclick="openBadgeModal(${i},'price')">${escHtml(badgePreviewText(t.priceBadge, t))}</button>`
+      : `<button class="tier-badge-btn add" onclick="openBadgeModal(${i},'price')">
+           <span class="plus-icon">${plusSmallSVG}</span>
+           Add price badge
+         </button>`;
+
+    /* Per-tier display field (label + var-icon + input + dropdown) */
+    const dispField = (fieldKey, label, value) => `
+      <div class="display-field" data-tier-field="${i}-${fieldKey}">
+        <div class="display-field-label-row">
+          <span>${label}</span>
+          <div class="tooltip-wrap">
+            <button class="var-icon-btn" onclick="toggleDropdown(event,'${i}-${fieldKey}')">${varIconSVG}</button>
+            <div class="tooltip">Insert variable</div>
+          </div>
+        </div>
+        <div style="position:relative;">
+          <input type="text" id="input_${i}_${fieldKey}"
+            value="${escHtml(value || '')}"
+            oninput="onTierFieldInput(${i},'${fieldKey}',this.value)">
+          <div class="var-dropdown" id="dd_${i}-${fieldKey}"></div>
+        </div>
+      </div>
+    `;
+
+    const box = document.createElement('div');
+    box.className = 'tier-box';
+
+    box.innerHTML = `
+      <div class="tier-box-header">
+        <div class="tier-box-label">
+          <span class="tier-icon">${packageIconSVG}</span>
+          Tier #${i + 1}
+        </div>
+        <div class="tier-btn-group">
+          <button class="tier-icon-btn" onclick="toggleActionList(event,${i})" id="menu-btn-${i}"><span class="tier-icon-btn-wrap">${dotsIconSVG}</span></button>
+          <div class="action-list" id="action-list-${i}">
+            <div class="action-list-item" onclick="duplicateTier(${i});closeActionLists()">Duplicate tier</div>
+            ${titleBadgeAction}
+            ${priceBadgeAction}
+          </div>
+          <button class="tier-icon-btn remove" onclick="removeTier(${i})"><span class="tier-icon-btn-wrap">${xIconSVG}</span></button>
+        </div>
+      </div>
+      <div class="tier-box-content">
+
+        <!-- Quantity (half row, empty right column for visual rhythm with the
+             other 2-col rows below) -->
+        <div class="tier-row tier-row-2col">
+          <div class="field">
+            <div class="field-label">Quantity</div>
+            <input type="number" value="${t.qty}" min="1"
+              oninput="tiers[${i}].qty=Math.max(1,+this.value||1);renderDefaultSelect();renderPreview()">
+          </div>
+          <div></div>
+        </div>
+
+        <!-- Title + Subtitle -->
+        <div class="tier-row tier-row-2col">
+          <div class="field">
+            <div class="field-label">Tier title</div>
+            <input type="text" value="${escHtml(t.title)}"
+              oninput="tiers[${i}].title=this.value;renderDefaultSelect();renderPreview()">
+          </div>
+          ${dispField('subtitle', 'Tier subtitle', t.subtitle)}
+        </div>
+
+        <!-- Pricing method + value (one 2-col row) -->
+        <div class="tier-row tier-row-2col">
+          <div class="field">
+            <div class="field-label">Pricing</div>
+            <select onchange="tiers[${i}].method=+this.value;renderTiers()">${methodOpts}</select>
+          </div>
+          ${valueInput}
+        </div>
+
+        <!-- Price + Price subtitle -->
+        <div class="tier-row tier-row-2col">
+          ${dispField('priceMain', 'Price', t.priceMain)}
+          ${dispField('priceSub',  'Price subtitle', t.priceSub)}
+        </div>
+
+        <!-- Price prefix + Price suffix -->
+        <div class="tier-row tier-row-2col">
+          ${dispField('pricePrefix', 'Price prefix', t.pricePrefix)}
+          ${dispField('priceSuffix', 'Price suffix', t.priceSuffix)}
+        </div>
+
+        <!-- Badge buttons row -->
+        <div class="tier-badge-row">
+          ${titleBadgeBtn}
+          ${priceBadgeBtn}
+        </div>
+      </div>
+    `;
+    container.appendChild(box);
+  });
+
+  renderDefaultSelect();
+  renderPreview();
+}
+
+/* Per-tier display field input handler */
+function onTierFieldInput(i, key, value) {
+  if (!tiers[i]) return;
+  tiers[i][key] = value;
+  renderPreview();
+}
+
+/* Live-evaluated badge label for the per-tier button.
+   Shared between titleBadge and priceBadge. */
+function badgePreviewText(badge, tier) {
+  if (!badge) return '';
+  const total = computeTotal(tier);
+  const origTotal = PLACEHOLDER_PRICE * tier.qty;
+  const saved = origTotal - total;
+  const discountPct = saved > 0.001 ? Math.round((saved / origTotal) * 100) : 0;
+  const vars = {
+    discountPct: discountPct > 0 ? discountPct : null,
+    amountSaved: saved > 0.001 ? saved : null,
+  };
+  const out = resolveBadge(badge.label, vars).trim();
+  return out || badge.label || 'Badge';
+}
+
+function addTier() {
+  const last = tiers[tiers.length - 1];
+  tiers.push(makeTierDefaults({
+    title: (last.qty + 1) + ' Packs',
+    qty: last.qty + 1,
+    method: 1,
+    value: 5,
+    pricePrefix: '{{orig_item_price}}',
+  }));
+  renderTiers();
+}
+
+function duplicateTier(i) {
+  const src = tiers[i];
+  tiers.splice(i + 1, 0, {
+    ...src,
+    title: src.title + ' (copy)',
+    titleBadge: src.titleBadge ? { ...src.titleBadge } : null,
+    priceBadge: src.priceBadge ? { ...src.priceBadge } : null,
+  });
+  if (defaultTierIndex > i) defaultTierIndex++;
+  if (selectedPreview  > i) selectedPreview++;
+  renderTiers();
+}
+
+function removeTier(i) {
+  if (tiers.length <= 1) return;
+  tiers.splice(i, 1);
+  if (defaultTierIndex >= tiers.length) defaultTierIndex = tiers.length - 1;
+  if (selectedPreview  >= tiers.length) selectedPreview  = tiers.length - 1;
+  renderTiers();
+}
+
+/* ── Display settings (per-tier) ───────────────────── */
+let dropdownAnchor = null;
+
+function positionDropdown(dd, btn) {
+  const rect = btn.getBoundingClientRect();
+  const ddH = dd.offsetHeight;
+  const spaceBelow = window.innerHeight - rect.bottom - 4;
+  const spaceAbove = rect.top - 4;
+
+  if (ddH > 0 && spaceBelow < ddH && spaceAbove > spaceBelow) {
+    dd.style.top = (rect.top - 4 - ddH) + 'px';
+  } else {
+    dd.style.top = (rect.bottom + 4) + 'px';
+  }
+  dd.style.right = (window.innerWidth - rect.right) + 'px';
+}
+
+function toggleDropdown(e, fieldId) {
+  e.stopPropagation();
+  if (openDropdown && openDropdown !== fieldId) {
+    const prevDd = document.getElementById('dd_' + openDropdown);
+    if (prevDd) prevDd.classList.remove('open');
+  }
+  const dd = document.getElementById('dd_' + fieldId);
+  if (!dd) return;
+  dd.innerHTML = getVarGroups().map(group =>
+    `<div class="var-group">
+      <div class="var-group-label">${group.label}</div>
+      ${group.vars.map(v =>
+        `<div class="var-item" onclick="insertVar('${fieldId}','${v.token}')">${v.name}</div>`
+      ).join('')}
+    </div>`
+  ).join('');
+  const willOpen = !dd.classList.contains('open');
+  if (willOpen) {
+    dropdownAnchor = e.currentTarget;
+    dd.classList.add('open');
+    positionDropdown(dd, dropdownAnchor);
+    openDropdown = fieldId;
+  } else {
+    dd.classList.remove('open');
+    openDropdown = null;
+    dropdownAnchor = null;
+  }
+}
+
+/* fieldId format: "<tierIdx>-<fieldKey>", e.g. "0-subtitle".
+   The matching <input> is `input_<tierIdx>_<fieldKey>`. */
+function insertVar(fieldId, token) {
+  const [tierIdxStr, fieldKey] = fieldId.split('-');
+  const tierIdx = +tierIdxStr;
+  const input = document.getElementById('input_' + tierIdxStr + '_' + fieldKey);
+  if (!input || !tiers[tierIdx]) return;
+  const s = input.selectionStart, e = input.selectionEnd;
+  const next = input.value.slice(0, s) + token + input.value.slice(e);
+  input.value = next;
+  tiers[tierIdx][fieldKey] = next;
+  input.focus();
+  try { input.setSelectionRange(s + token.length, s + token.length); } catch {}
+  document.getElementById('dd_' + fieldId).classList.remove('open');
+  openDropdown = null;
+  dropdownAnchor = null;
+  renderPreview();
+}
+
+document.addEventListener('click', (e) => {
+  if (openDropdown) {
+    const dd = document.getElementById('dd_' + openDropdown);
+    if (dd && !dd.contains(e.target)) {
+      dd.classList.remove('open');
+      openDropdown = null;
+      dropdownAnchor = null;
+    }
+  }
+});
+
+window.addEventListener('scroll', () => {
+  if (openDropdown && dropdownAnchor) {
+    const dd = document.getElementById('dd_' + openDropdown);
+    if (dd) positionDropdown(dd, dropdownAnchor);
+  }
+}, true);
+
+function toggleActionList(e, i) {
+  e.stopPropagation();
+  const id = 'action-list-' + i;
+  const isOpen = document.getElementById(id).classList.contains('open');
+  closeActionLists();
+  if (!isOpen) document.getElementById(id).classList.add('open');
+}
+
+function closeActionLists() {
+  document.querySelectorAll('.action-list').forEach(el => el.classList.remove('open'));
+}
+
+document.addEventListener('click', closeActionLists);
+
+/* ── Per-item variants helpers ─────────────────────── */
+/* Single shared <style> element holds the per-render container-query rules
+   for the selects-row. Re-written on each renderPreview() call. */
+let variantStyleEl = null;
+function ensureVariantStyleEl() {
+  if (!variantStyleEl) {
+    variantStyleEl = document.createElement('style');
+    document.head.appendChild(variantStyleEl);
+  }
+  return variantStyleEl;
+}
+
+/* Persistent state for per-item variants, keyed by tier index.
+   Each entry is an array of { Color, Size, Width } — one per variant row.
+   Survives renderPreview() rebuilds so a user's selections aren't lost when
+   they click another tier and come back. Reset only when tier qty changes
+   below the row's index. */
+const variantState = {};
+
+function ensureVariantState(tierIdx, qty) {
+  if (!variantState[tierIdx]) variantState[tierIdx] = [];
+  const arr = variantState[tierIdx];
+  // Grow with fresh defaults if qty went up
+  while (arr.length < qty) {
+    arr.push({ Color: 'Colorful', Size: 'Small', Width: 'Regular' });
+  }
+  // Don't shrink — keep state in case user bumps qty back up
+  return arr;
+}
+
+/* Demo data for variant selects — small, fake, just enough to show how
+   the responsive layout + availability rules + error states behave. */
+const VARIANT_THUMBNAILS = {
+  /* Real product photos from Happy Socks, resized to 108×108 (2x DPR for
+     54px display) and JPEG-encoded at q75 for compactness. */
+  Colorful: 'data:image/jpeg;base64,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',
+  Blue: 'data:image/jpeg;base64,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',
+  Black: 'data:image/jpeg;base64,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',
+};
+
+/* All possible fields. `selectCount` slider picks how many are rendered. */
+const VARIANT_FIELDS = [
+  { name: 'Color', options: ['Colorful', 'Blue', 'Black'], default: 'Colorful' },
+  { name: 'Size',  options: ['Small', 'Medium', 'Large'],  default: 'Small' },
+  { name: 'Width', options: ['Regular', 'Wide'],           default: 'Regular' },
+];
+
+/* Color values that are themselves unavailable. Picking one of these flags
+   Color as the first unavailable select, sending Size and Width into cascade. */
+const UNAVAILABLE_COLORS = ['Black'];
+
+/* Per-color availability rules. Options listed here are appended with
+   " - Unavailable" and trigger error state when selected. Rules under an
+   unavailable Color never apply — its Size and Width fall through to cascade. */
+const VARIANT_COLOR_RULES = {
+  Colorful: { Size: [],        Width: []       },
+  Blue:     { Size: ['Small'], Width: ['Wide'] },
+  Black:    { Size: [],        Width: []       },
+};
+
+function isIntrinsicallyUnavailable(fieldName, optionValue, color) {
+  if (fieldName === 'Color') return UNAVAILABLE_COLORS.includes(optionValue);
+  const rules = VARIANT_COLOR_RULES[color] || VARIANT_COLOR_RULES.Colorful;
+  return (rules[fieldName] || []).includes(optionValue);
+}
+
+function variantLabelFor(fieldName, optionValue, color) {
+  return isIntrinsicallyUnavailable(fieldName, optionValue, color) ? `${optionValue} - Unavailable` : optionValue;
+}
+
+/* Cascade rule: if option N is unavailable, options N+1 .. last are also
+   unavailable (downstream selects can't determine availability once the
+   chain is broken). Returns the smallest index in VARIANT_FIELDS that is
+   intrinsically unavailable for the current state, or -1 if none.
+   Color is index 0 and can itself be unavailable (e.g. Black). */
+function firstUnavailableIndex(state, count) {
+  for (let i = 0; i < count; i++) {
+    const def = VARIANT_FIELDS[i];
+    if (isIntrinsicallyUnavailable(def.name, state[def.name], state.Color)) return i;
+  }
+  return -1;
+}
+
+/* Build one variant row: thumbnail + selects-container with `selectCount`
+   selects. `state` is a shared object — mutating it here persists the user's
+   selections across renderPreview() rebuilds. */
+function makeVariantRow(state) {
+  const variant = document.createElement('div');
+  variant.className = 'b-variant';
+
+  const thumb = document.createElement('div');
+  thumb.className = 'b-variant-thumb';
+  thumb.style.backgroundImage = `url("${VARIANT_THUMBNAILS[state.Color] || VARIANT_THUMBNAILS.Colorful}")`;
+  variant.appendChild(thumb);
+
+  const options = document.createElement('div');
+  options.className = 'b-variant-options';
+
+  const selectsContainer = document.createElement('div');
+  selectsContainer.className = 'b-selects-container';
+  const row = document.createElement('div');
+  row.className = 'b-selects-row';
+  selectsContainer.appendChild(row);
+  options.appendChild(selectsContainer);
+  variant.appendChild(options);
+
+  const selectEls = {};
+
+  /* Error visibility uses cascade semantics: from the first unavailable index
+     onward, every select gets red border + " - Unavailable" suffix on its
+     currently-selected value + its own inline error message below.
+
+     Option-list labels also reflect cascade: a select in cascade has every
+     option suffixed with " - Unavailable"; a non-cascade select only suffixes
+     its intrinsically-unavailable options (Black for Color, Small for Blue's
+     Size, etc.). */
+  function evaluateErrors() {
+    const firstBad = firstUnavailableIndex(state, selectCount);
+    for (let i = 0; i < selectCount; i++) {
+      const def = VARIANT_FIELDS[i];
+      const el = selectEls[def.name];
+      if (!el) continue;
+      const isErr = firstBad !== -1 && i >= firstBad;
+      const inCascade = firstBad !== -1 && i > firstBad;
+      el.cell.classList.toggle('is-error', isErr);
+      el.wrap.classList.toggle('is-error', isErr);
+      // Update visible value text — suffix shown either because the option is
+      // intrinsically unavailable, or because this select is in cascade
+      // (downstream of the first unavailable select).
+      const baseVal = state[def.name];
+      const intrinsic = isIntrinsicallyUnavailable(def.name, baseVal, state.Color);
+      el.value.textContent = (inCascade && !intrinsic) ? `${baseVal} - Unavailable` : variantLabelFor(def.name, baseVal, state.Color);
+      // Rebuild option labels. Cascade selects (strictly below firstBad) get
+      // every option suffixed; the firstBad select itself + selects above it
+      // only suffix their own intrinsically-unavailable options.
+      rebuildOptionLabels(def.name, /* cascadeAll */ inCascade);
+    }
+  }
+
+  function rebuildOptionLabels(fieldName, cascadeAll) {
+    const el = selectEls[fieldName];
+    if (!el) return;
+    const native = el.nativeSelect;
+    const currentValue = state[fieldName];
+    native.innerHTML = '';
+    VARIANT_FIELDS.find(d => d.name === fieldName).options.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = cascadeAll ? `${opt} - Unavailable` : variantLabelFor(fieldName, opt, state.Color);
+      if (opt === currentValue) o.selected = true;
+      native.appendChild(o);
+    });
+  }
+
+  for (let i = 0; i < selectCount; i++) {
+    const def = VARIANT_FIELDS[i];
+    const currentVal = state[def.name];
+
+    /* One grid cell wraps the select + its own error message so they stack
+       together within a single grid track. Cell takes the error class; the
+       inner select takes the red border styling. */
+    const cell = document.createElement('div');
+    cell.className = 'b-select-cell';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'b-select';
+
+    const content = document.createElement('div');
+    content.className = 'b-select-content';
+
+    const label = document.createElement('p');
+    label.className = 'b-select-label';
+    label.textContent = def.name;
+
+    const value = document.createElement('p');
+    value.className = 'b-select-value';
+    value.textContent = variantLabelFor(def.name, currentVal, state.Color);
+
+    content.appendChild(label);
+    content.appendChild(value);
+
+    const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    chevron.setAttribute('class', 'b-select-chevron');
+    chevron.setAttribute('viewBox', '0 0 20 20');
+    chevron.setAttribute('fill', 'none');
+    chevron.innerHTML = '<polyline points="6 8 10 12 14 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+
+    const nativeSelect = document.createElement('select');
+    nativeSelect.setAttribute('aria-label', def.name);
+    def.options.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = variantLabelFor(def.name, opt, state.Color);
+      if (opt === currentVal) o.selected = true;
+      nativeSelect.appendChild(o);
+    });
+
+    wrap.appendChild(content);
+    wrap.appendChild(chevron);
+    wrap.appendChild(nativeSelect);
+    cell.appendChild(wrap);
+
+    /* Inline error message — only visible when this cell has .is-error. */
+    const errMsg = document.createElement('div');
+    errMsg.className = 'b-variant-error';
+    errMsg.innerHTML = `
+      <svg class="b-variant-error-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M10 6.5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="10" cy="13.25" r="0.85" fill="currentColor"/>
+      </svg>
+      <p class="b-variant-error-text"></p>
+    `;
+    // Set error text via textContent (XSS-safe; user-controllable via Custom wording).
+    // Empty errorMessage falls back to the default so the error state never blanks.
+    errMsg.querySelector('.b-variant-error-text').textContent =
+      (customize.errorMessage || '').trim() || ERROR_MESSAGE_DEFAULT;
+    cell.appendChild(errMsg);
+
+    selectEls[def.name] = { cell, wrap, value, nativeSelect };
+
+    nativeSelect.addEventListener('change', () => {
+      state[def.name] = nativeSelect.value;
+      if (def.name === 'Color') {
+        if (VARIANT_THUMBNAILS[nativeSelect.value]) {
+          thumb.style.backgroundImage = `url("${VARIANT_THUMBNAILS[nativeSelect.value]}")`;
+        }
+      }
+      evaluateErrors();
+    });
+
+    row.appendChild(cell);
+  }
+
+  evaluateErrors();
+  return variant;
+}
+
+/* ── Render preview ────────────────────────────────── */
+function renderPreview() {
+  const list = document.getElementById('previewList');
+  list.innerHTML = '';
+
+  // Bundle title (Custom wording → Title). Only rendered when non-empty,
+  // sitting above the tiers. Font size + color follow CSS variables so it
+  // responds to style tokens and templates.
+  const titleText = (customize.bundleTitle || '').trim();
+  if (titleText) {
+    const titleEl = document.createElement('div');
+    titleEl.className = 'b-bundle-title';
+    titleEl.textContent = titleText;
+    list.appendChild(titleEl);
+  }
+
+  // Gap switches when ANY tier has a priceBadge with non-empty resolved label.
+  // Title badge sits inline next to the title and never affects gap.
+  let anyPriceBadge = false;
+  tiers.forEach((t) => {
+    if (!t.priceBadge) return;
+    const total       = computeTotal(t);
+    const origTotal   = PLACEHOLDER_PRICE * t.qty;
+    const saved       = origTotal - total;
+    const discountPct = saved > 0.001 ? Math.round((saved / origTotal) * 100) : 0;
+    const vars = {
+      discountPct: discountPct > 0 ? discountPct : null,
+      amountSaved: saved > 0.001 ? saved : null,
+    };
+    if (resolveBadge(t.priceBadge.label, vars).trim()) anyPriceBadge = true;
+  });
+  list.classList.toggle('has-badge', anyPriceBadge);
+
+  tiers.forEach((t, i) => {
+    const total       = computeTotal(t);
+    const item        = t.qty > 0 ? total / t.qty : 0;
+    const unit        = item * UNIT_RATIO;
+    const origItem    = PLACEHOLDER_PRICE;
+    const origTotal   = PLACEHOLDER_PRICE * t.qty;
+    const origUnit    = PLACEHOLDER_PRICE * UNIT_RATIO;
+    const saved       = origTotal - total;
+    const discountPct = saved > 0.001 ? Math.round((saved / origTotal) * 100) : 0;
+
+    const vars = {
+      totalPrice:    total,
+      itemPrice:     item,
+      unitPrice:     unit,
+      origItemPrice: t.method !== 0 ? origItem : null,
+      origTotal:     t.method !== 0 ? origTotal : null,
+      origUnitPrice: t.method !== 0 ? origUnit : null,
+      discountPct:   discountPct > 0 ? discountPct : null,
+      amountSaved:   saved > 0.001 ? saved : null,
+    };
+
+    const subtitleText  = resolve(t.subtitle,  vars).trim();
+    const priceMainText = resolve(t.priceMain, vars).trim();
+    const priceSubText  = resolve(t.priceSub,  vars).trim();
+    const pfxText       = resolve(t.pricePrefix, vars).trim();
+    const sfxText       = resolve(t.priceSuffix, vars).trim();
+    const titleBadgeText = t.titleBadge ? resolveBadge(t.titleBadge.label, vars).trim() : '';
+    const priceBadgeText = t.priceBadge ? resolveBadge(t.priceBadge.label, vars).trim() : '';
+
+    const isActive = selectedPreview === i;
+    const perItemEnabled = document.getElementById('cbPerItemVariants')?.checked;
+    /* Variants section renders only inside the active tier — keeps the
+       preview compact and matches the "select to configure" UX pattern. */
+    const showVariants = perItemEnabled && isActive;
+
+    const card = document.createElement('div');
+    card.className = 'b-card' + (isActive ? ' active' : '') + (showVariants ? ' has-variants' : '');
+    card.onclick = (ev) => {
+      // Ignore clicks that originated inside a variant select — the user is
+      // interacting with the dropdown, not picking a tier.
+      if (ev.target.closest('.b-select')) return;
+      selectedPreview = i; renderPreview();
+    };
+
+    /* Title badge: inline after the title, neutral grey by default
+       (overridden inline per-tier). Uses --title-badge-radius. */
+    const titleBadgeHtml = titleBadgeText
+      ? `<span class="b-title-badge" style="background:${t.titleBadge.bg};color:${t.titleBadge.text};">${titleBadgeText}</span>`
+      : '';
+
+    /* Price badge: floating top-right (existing .b-badge styling). */
+    const priceBadgeHtml = priceBadgeText
+      ? `<div class="b-badge" style="background:${t.priceBadge.bg};color:${t.priceBadge.text};">${priceBadgeText}</div>`
+      : '';
+
+    /* Header markup is identical regardless of per-item variants. When
+       per-item is on, this is wrapped in a .b-header-row so the variants
+       section can stack below it inside the same card. */
+    const headerInnerHtml = `
+      <div class="b-radio">
+        <svg class="b-radio-check" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 4L4 7L10 1" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="b-info">
+        <div class="b-name-row">
+          <span class="b-name">${escHtml(t.title)}</span>
+          ${titleBadgeHtml}
+        </div>
+        ${subtitleText ? `<div class="b-sub">${subtitleText}</div>` : ''}
+      </div>
+      <div class="b-price">
+        <div class="b-price-main-row">
+          ${pfxText ? `<span class="b-price-top">${pfxText}</span>` : ''}
+          <span class="b-price-main">${priceMainText || '—'}</span>
+          ${sfxText ? `<span class="b-price-unit-lbl">${sfxText}</span>` : ''}
+        </div>
+        ${priceSubText ? `<div class="b-price-bottom">${priceSubText}</div>` : ''}
+      </div>
+    `;
+
+    if (showVariants) {
+      card.innerHTML = `
+        ${priceBadgeHtml}
+        <div class="b-header-row">${headerInnerHtml}</div>
+        <div class="b-variants" data-tier="${i}"></div>
+      `;
+      // Populate variants section with `t.qty` rows (one per item in the bundle).
+      // Persistent state ensures user selections survive renderPreview() rebuilds.
+      const variantsHost = card.querySelector('.b-variants');
+      const states = ensureVariantState(i, t.qty);
+      for (let k = 0; k < t.qty; k++) {
+        if (k > 0) {
+          const div = document.createElement('div');
+          div.className = 'b-variants-divider';
+          variantsHost.appendChild(div);
+        }
+        variantsHost.appendChild(makeVariantRow(states[k]));
+      }
+      // Mount the per-tier container-query rule for the current selectCount.
+      // Threshold = N × min-width + (N-1) × 8px gap. When narrower than that,
+      // selects collapse to a single column. Min-width is hardcoded to 160px
+      // — there's no UI control for it.
+      const minw = 160, GAP = 8;
+      const threshold = selectCount * minw + (selectCount - 1) * GAP;
+      ensureVariantStyleEl().textContent = `
+        .b-selects-row .b-select { min-width: ${minw}px; }
+        @container (max-width: ${threshold - 1}px) {
+          .b-selects-row { grid-auto-flow: row; grid-auto-columns: 1fr; }
+          .b-selects-row .b-select { min-width: 0; }
+        }
+      `;
+    } else {
+      card.innerHTML = `
+        ${priceBadgeHtml}
+        ${headerInnerHtml}
+      `;
+    }
+
+    list.appendChild(card);
+  });
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Init ──────────────────────────────────────────── */
+renderTiers();
+renderPreview();
+initCustomize();
+</script>
+
+<!-- Badge Modal -->
+<div class="modal-overlay" id="badgeModal">
+  <div class="modal" role="dialog" aria-labelledby="badgeModalTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="badgeModalTitle">Badge</div>
+      <button class="modal-close" onclick="closeBadgeModal()" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+          <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <div class="modal-field-label-row">
+          <span>Label</span>
+          <div class="tooltip-wrap">
+            <button class="var-icon-btn" onclick="toggleModalVarDropdown(event)" id="modalVarBtn">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                <path d="M7 4C5.5 4 4.5 5 4.5 6.5V8.5C4.5 10 3.5 10.5 2.5 10.5C3.5 10.5 4.5 11 4.5 12.5V14.5C4.5 16 5.5 17 7 17" stroke="#616161" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M13 4C14.5 4 15.5 5 15.5 6.5V8.5C15.5 10 16.5 10.5 17.5 10.5C16.5 10.5 15.5 11 15.5 12.5V14.5C15.5 16 14.5 17 13 17" stroke="#616161" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <div class="tooltip">Insert variable</div>
+            <div class="var-dropdown" id="modalVarDropdown"></div>
+          </div>
+        </div>
+        <div class="modal-input-wrap">
+          <input type="text" id="badgeLabelInput" oninput="onBadgeLabelInput()">
+          <span class="input-counter" id="badgeLabelCounter">0/18</span>
+        </div>
+        <div class="modal-helper">Use the variable to display the offer discount (if applicable).</div>
+      </div>
+
+      <div class="color-row">
+        <div class="color-field">
+          <div class="color-field-label">Background color</div>
+          <div class="color-input-row">
+            <label class="color-swatch" id="bgSwatch">
+              <input type="color" id="badgeBgColor" oninput="onBgColorChange(this.value)">
+            </label>
+            <div class="hex-input-wrap">
+              <span class="prefix">#</span>
+              <input type="text" id="badgeBgHex" maxlength="6" oninput="onBgHexInput(this.value)">
+            </div>
+          </div>
+        </div>
+        <div class="color-field">
+          <div class="color-field-label">Text color</div>
+          <div class="color-input-row">
+            <label class="color-swatch" id="textSwatch">
+              <input type="color" id="badgeTextColor" oninput="onTextColorChange(this.value)">
+            </label>
+            <div class="hex-input-wrap">
+              <span class="prefix">#</span>
+              <input type="text" id="badgeTextHex" maxlength="6" oninput="onTextHexInput(this.value)">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" id="badgeModalFooter">
+      <button class="modal-btn modal-btn-critical" id="badgeRemoveBtn" onclick="onModalRemove()">Remove</button>
+      <div class="modal-footer-end">
+        <button class="modal-btn modal-btn-secondary" onclick="closeBadgeModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="badgeSaveBtn" onclick="saveBadge()" disabled>Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
